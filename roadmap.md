@@ -45,7 +45,7 @@ Digitaliser la gestion des points de dépôt/retrait Orange Money et MTN MoMo au
 | INF-02 | Configurer MySQL | 0.5j | Terminé |
 | INF-03 | Initialiser Nuxt 3 + PWA + Tailwind | 1j | Terminé |
 | INF-04 | Environnement de dev (Docker/local) | 1j | Terminé |
-| INF-05 | Pest + Vitest (TDD) | 0.5j | À faire |
+| INF-05 | Pest + Vitest (TDD) | 0.5j | Terminé |
 | AUTH-01 | Migration + modèle User | 0.5j | À faire |
 | AUTH-02 | Endpoint login [TDD] | 1j | À faire |
 | AUTH-03 | Page Connexion (Nuxt) | 0.5j | À faire |

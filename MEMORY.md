@@ -11,9 +11,9 @@
 | Champ | Valeur |
 |---|---|
 | **Dernière mise à jour** | 2026-07-13 |
-| **Ticket courant** | INF-05 (prochain) |
+| **Ticket courant** | AUTH-01 (prochain) |
 | **Sprint** | 1 — Setup + Auth |
-| **Tickets terminés** | 5 / 46 (BOOT-00 + INF-01 à INF-04) |
+| **Tickets terminés** | 6 / 46 (BOOT-00 + INF-01 à INF-05) |
 
 ### Structure du monorepo
 
@@ -225,6 +225,35 @@ curl.exe http://localhost:3000/ → 200
 
 | Champ | Détail |
 |---|---|
+| **Statut** | ✅ Terminé |
+| **Objectif** | Pest (backend) + Vitest (frontend) opérationnels |
+
+#### Backend
+- `pestphp/pest` v4.7 installé (`vendor/bin/pest --init`)
+- `tests/Pest.php` — `RefreshDatabase` sur les tests `Feature/`
+- `tests/Unit/ExampleTest.php` — test trivial existant
+
+#### Frontend
+- `vitest`, `@vue/test-utils`, `happy-dom`, `@vitejs/plugin-vue`
+- `vitest.config.ts` — happy-dom, alias `~` et `@`
+- `tests/unit/example.test.ts` — test trivial
+- `npm run test` / `npm run test:watch`
+
+#### Validation
+```bash
+cd zola-api && php artisan test  → 2 passed (Pest)
+cd zola-web && npm run test     → 1 passed (Vitest)
+```
+
+#### Confirmation
+✅ INF-05 Done — Pest et Vitest opérationnels, prêts pour le TDD
+
+---
+
+### AUTH-01 — Migration et modèle User
+
+| Champ | Détail |
+|---|---|
 | **Statut** | ⏳ Prochain ticket |
 
 ## Historique des commits
@@ -235,7 +264,8 @@ curl.exe http://localhost:3000/ → 200
 | 2026-07-13 | INF-01 | feat(INF-01): init Laravel API + Sanctum + JSON errors | `66ec4d5` |
 | 2026-07-13 | INF-02 | feat(INF-02): config MySQL zola utf8mb4 | `25dc6ac` |
 | 2026-07-13 | INF-03 | feat(INF-03): init Nuxt 3 PWA Tailwind Pinia | `269a496` |
-| 2026-07-13 | INF-04 | feat(INF-04): environnement dev Docker + scripts + seed | `ca38106` |
+| 2026-07-13 | INF-04 | feat(INF-04): environnement dev Docker + scripts + seed | `7e82c4d` |
+| 2026-07-13 | INF-05 | feat(INF-05): Pest backend + Vitest frontend TDD | (a pousser) |
 
 ---
 
@@ -265,4 +295,4 @@ Pour chaque ticket :
 
 ## Backlog rapide
 
-Sprint 1 : ~~INF-01~~ ~~INF-02~~ ~~INF-03~~ ~~INF-04~~ → **INF-05** → AUTH-01 → …
+Sprint 1 : ~~INF-01~~ ~~INF-05~~ → **AUTH-01** → AUTH-02 → …

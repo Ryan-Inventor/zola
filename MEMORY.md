@@ -369,6 +369,7 @@ cd zola-web && npm run build  → build OK
 | 2026-07-13 | INF-05 | feat(INF-05): Pest backend + Vitest frontend TDD | `3973208` |
 | 2026-07-13 | AUTH-01 | feat(AUTH-01): migration users + enums + modèle User Sanctum | `54415bb` |
 | 2026-07-13 | AUTH-02 | feat(AUTH-02): endpoint login email/téléphone + tests TDD | `f12c5fc` |
+| 2026-07-13 | AUTH-03 | feat(AUTH-03): page connexion Nuxt + store Pinia | `23d7baa` |
 
 ---
 

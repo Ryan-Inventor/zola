@@ -11,9 +11,9 @@
 | Champ | Valeur |
 |---|---|
 | **Dernière mise à jour** | 2026-07-13 |
-| **Ticket courant** | INF-02 (prochain) |
+| **Ticket courant** | INF-03 (prochain) |
 | **Sprint** | 1 — Setup + Auth |
-| **Tickets terminés** | 2 / 46 (BOOT-00 + INF-01) |
+| **Tickets terminés** | 3 / 46 (BOOT-00 + INF-01 + INF-02) |
 
 ### Structure du monorepo
 
@@ -109,17 +109,53 @@ curl.exe -s http://127.0.0.1:8000/api/v1/test
 
 | Champ | Détail |
 |---|---|
-| **Statut** | ⏳ Prochain ticket |
-| **Objectif** | Base `zola` MySQL connectée |
+| **Statut** | ✅ Terminé |
+| **Objectif** | Base `zola` MySQL connectée, charset utf8mb4 |
+
+#### Actions réalisées
+1. `CREATE DATABASE zola CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci` (via PDO PHP — client `mysql` absent du PATH)
+2. `.env` déjà configuré (INF-01) : `DB_HOST=127.0.0.1`, `DB_PORT=3306`, `DB_DATABASE=zola`
+3. `config/database.php` :
+   - `default` → `mysql` (au lieu de `sqlite`)
+   - connexion `mysql` : `charset` et `collation` fixés à `utf8mb4` / `utf8mb4_unicode_ci`
+   - `database` par défaut → `zola`
+
+#### Commandes exécutées
+```bash
+php -r "PDO create database zola utf8mb4..."
+php artisan db:show
+php artisan migrate:install   # requis pour migrate:status sur base vide
+php artisan migrate:status
+```
+
+#### Résultat validation
+```
+MySQL 9.1.0 | Connection mysql | Database zola | Host 127.0.0.1 | Port 3306
+```
+`migrate:status` → 4 migrations en statut **Pending** (table `migrations` créée). ✅
+
+#### Note
+- `db:show` affiche la connexion puis peut avertir sur l'extension PHP `intl` manquante (cosmétique, connexion OK).
+- Mot de passe root MySQL vide sur l'environnement local.
+
+#### Confirmation
+✅ INF-02 Done — MySQL connecté
 
 ---
+
+### INF-03 — Initialiser Nuxt 3 + PWA
+
+| Champ | Détail |
+|---|---|
+| **Statut** | ⏳ Prochain ticket |
 
 ## Historique des commits
 
 | Date | Ticket | Message | SHA |
 |---|---|---|---|
 | 2026-07-13 | BOOT-00 | feat(BOOT-00): gouvernance projet | `7cd4bd9` |
-| 2026-07-13 | INF-01 | feat(INF-01): init Laravel API + Sanctum + JSON errors | (à pousser) |
+| 2026-07-13 | INF-01 | feat(INF-01): init Laravel API + Sanctum + JSON errors | `66ec4d5` |
+| 2026-07-13 | INF-02 | feat(INF-02): config MySQL zola utf8mb4 | (à pousser) |
 
 ---
 
@@ -129,7 +165,7 @@ curl.exe -s http://127.0.0.1:8000/api/v1/test
 |---|---|---|
 | R-01 | Dépôt Git non initialisé au démarrage | ✅ Résolu |
 | R-02 | Laravel 13 installé au lieu de 11 (version plus récente) | Accepté |
-| R-03 | MySQL non encore configuré (INF-02) | Ouvert |
+| R-03 | MySQL non encore configuré (INF-02) | ✅ Résolu |
 | R-04 | Comportement Campay numéro non enregistré (TXN-02) | Ouvert |
 
 ---
@@ -149,4 +185,4 @@ Pour chaque ticket :
 
 ## Backlog rapide
 
-Sprint 1 : ~~INF-01~~ → **INF-02** → INF-03 → INF-04 → INF-05 → AUTH-01 → …
+Sprint 1 : ~~INF-01~~ ~~INF-02~~ → **INF-03** → INF-04 → INF-05 → AUTH-01 → …

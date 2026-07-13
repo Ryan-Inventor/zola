@@ -185,6 +185,46 @@ curl.exe http://localhost:3000/ → 200
 
 | Champ | Détail |
 |---|---|
+| **Statut** | ✅ Terminé |
+| **Objectif** | Docker Compose + scripts locaux + README + seed initial |
+
+#### Fichiers créés
+- `docker-compose.yml` — mysql, api (Laravel), web (Nuxt)
+- `docker/api/Dockerfile`, `docker/web/Dockerfile`
+- `scripts/dev.ps1`, `scripts/dev.sh` — démarrage une commande
+- `scripts/seed.ps1`, `scripts/seed.sh` — migrate + seed
+- `scripts/ensure-database.php` — création base `zola`
+- `README.md` — instructions de démarrage
+- `zola-api/database/seeders/InitialSeeder.php` — préparation AUTH-01
+
+#### Correctifs MySQL (local)
+- `AppServiceProvider` : `Schema::defaultStringLength(191)`
+- Migration `failed_jobs` : colonnes `connection`/`queue` limitées à 50 chars (index composite utf8mb4)
+
+#### Seed initial
+- Utilisateur dev : `dev@zola.test` / `password` (schéma Laravel actuel, remplacé en AUTH-01)
+
+#### Validation
+```powershell
+.\scripts\dev.ps1
+# [OK] Environnement Zola operationnel
+# API : http://localhost:8000/api/v1
+# Web : http://localhost:3000
+```
+
+#### Note
+- Docker non installé sur la machine de dev actuelle — `docker compose up` disponible pour les autres environnements.
+- Script local `dev.ps1` validé comme équivalent.
+
+#### Confirmation
+✅ INF-04 Done — Environnement de dev opérationnel
+
+---
+
+### INF-05 — Outils de test (TDD)
+
+| Champ | Détail |
+|---|---|
 | **Statut** | ⏳ Prochain ticket |
 
 ## Historique des commits
@@ -194,7 +234,8 @@ curl.exe http://localhost:3000/ → 200
 | 2026-07-13 | BOOT-00 | feat(BOOT-00): gouvernance projet | `7cd4bd9` |
 | 2026-07-13 | INF-01 | feat(INF-01): init Laravel API + Sanctum + JSON errors | `66ec4d5` |
 | 2026-07-13 | INF-02 | feat(INF-02): config MySQL zola utf8mb4 | `25dc6ac` |
-| 2026-07-13 | INF-03 | feat(INF-03): init Nuxt 3 PWA Tailwind Pinia | (à pousser) |
+| 2026-07-13 | INF-03 | feat(INF-03): init Nuxt 3 PWA Tailwind Pinia | `269a496` |
+| 2026-07-13 | INF-04 | feat(INF-04): environnement dev Docker + scripts + seed | (a pousser) |
 
 ---
 
@@ -224,4 +265,4 @@ Pour chaque ticket :
 
 ## Backlog rapide
 
-Sprint 1 : ~~INF-01~~ ~~INF-02~~ ~~INF-03~~ → **INF-04** → INF-05 → AUTH-01 → …
+Sprint 1 : ~~INF-01~~ ~~INF-02~~ ~~INF-03~~ ~~INF-04~~ → **INF-05** → AUTH-01 → …

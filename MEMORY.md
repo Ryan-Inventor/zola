@@ -334,6 +334,7 @@ php artisan test                   → 16 passed (53 assertions)
 | 2026-07-13 | INF-04 | feat(INF-04): environnement dev Docker + scripts + seed | `7e82c4d` |
 | 2026-07-13 | INF-05 | feat(INF-05): Pest backend + Vitest frontend TDD | `3973208` |
 | 2026-07-13 | AUTH-01 | feat(AUTH-01): migration users + enums + modèle User Sanctum | `54415bb` |
+| 2026-07-13 | AUTH-02 | feat(AUTH-02): endpoint login email/téléphone + tests TDD | `f12c5fc` |
 
 ---
 

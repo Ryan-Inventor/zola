@@ -11,9 +11,9 @@
 | Champ | Valeur |
 |---|---|
 | **Dernière mise à jour** | 2026-07-13 |
-| **Ticket courant** | AUTH-03 (prochain) |
+| **Ticket courant** | AUTH-04 (prochain) |
 | **Sprint** | 1 — Setup + Auth |
-| **Tickets terminés** | 8 / 46 (BOOT-00 + INF-01 à INF-05 + AUTH-01 + AUTH-02) |
+| **Tickets terminés** | 9 / 46 (BOOT-00 + INF-01 à INF-05 + AUTH-01 à AUTH-03) |
 
 ### Structure du monorepo
 
@@ -323,6 +323,40 @@ php artisan test                   → 16 passed (53 assertions)
 
 ---
 
+### AUTH-03 — Page Connexion (Nuxt)
+
+| Champ | Détail |
+|---|---|
+| **Statut** | ✅ Terminé |
+| **Objectif** | Maquette `01-connexion.html` convertie en page Nuxt branchée sur `POST /auth/login` |
+| **Références** | docs/PROMPTS.md AUTH-03, docs/01-connexion.html |
+
+#### Fichiers créés
+- `zola-web/pages/connexion.vue` — HTML/CSS fidèle à la maquette (panneau marque, responsive, états d'erreur inline, spinner, toggle mot de passe)
+- `zola-web/stores/auth.ts` — Pinia : `login()`, `logout()`, état `user`/`token` (cookie `zola_token`)
+- `zola-web/composables/useAuth.ts` — façade auth + `getDashboardRoute()` + `loginAndRedirect()`
+- `zola-web/types/auth.ts`, `utils/api-error.ts` — types et extraction message API
+- `zola-web/middleware/auth.ts` — protection routes authentifiées
+- `zola-web/pages/points/index.vue`, `pages/admin/comptes.vue` — cibles de redirection (stubs PT-05/AD-02)
+- `zola-web/tests/unit/auth.test.ts` — test extraction erreur API
+
+#### Comportement
+- Succès → redirection par rôle : `admin` → `/admin/comptes`, `owner`/`superviseur` → `/points` (ou `?redirect=` si présent)
+- Échec → message inline avec préfixe `⚠`, champs en erreur, pas d'`alert()`
+- Validation client : champs vides → *« Veuillez remplir tous les champs. »*
+
+#### Validation
+```bash
+cd zola-web && npm run test   → 3 passed
+cd zola-web && npm run build  → build OK
+# API : POST /auth/login owner@zola.test / password → token + user
+```
+
+#### Confirmation
+✅ AUTH-03 Done — Page Connexion fonctionnelle
+
+---
+
 ## Historique des commits
 
 | Date | Ticket | Message | SHA |
@@ -364,4 +398,4 @@ Pour chaque ticket :
 
 ## Backlog rapide
 
-Sprint 1 : ~~INF-01~~ ~~INF-05~~ ~~AUTH-01~~ ~~AUTH-02~~ → **AUTH-03** → …
+Sprint 1 : ~~INF-01~~ ~~INF-05~~ ~~AUTH-01~~ ~~AUTH-02~~ ~~AUTH-03~~ → **AUTH-04** → …

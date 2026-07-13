@@ -297,7 +297,7 @@ php artisan test                   # 8 passed (13 assertions)
 | 2026-07-13 | INF-03 | feat(INF-03): init Nuxt 3 PWA Tailwind Pinia | `269a496` |
 | 2026-07-13 | INF-04 | feat(INF-04): environnement dev Docker + scripts + seed | `7e82c4d` |
 | 2026-07-13 | INF-05 | feat(INF-05): Pest backend + Vitest frontend TDD | `3973208` |
-| 2026-07-13 | AUTH-01 | feat(AUTH-01): migration users + enums + modèle User Sanctum | (voir git log) |
+| 2026-07-13 | AUTH-01 | feat(AUTH-01): migration users + enums + modèle User Sanctum | `54415bb` |
 
 ---
 

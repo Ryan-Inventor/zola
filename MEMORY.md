@@ -11,9 +11,9 @@
 | Champ | Valeur |
 |---|---|
 | **Dernière mise à jour** | 2026-07-13 |
-| **Ticket courant** | AUTH-01 (prochain) |
+| **Ticket courant** | AUTH-02 (prochain) |
 | **Sprint** | 1 — Setup + Auth |
-| **Tickets terminés** | 6 / 46 (BOOT-00 + INF-01 à INF-05) |
+| **Tickets terminés** | 7 / 46 (BOOT-00 + INF-01 à INF-05 + AUTH-01) |
 
 ### Structure du monorepo
 
@@ -254,7 +254,38 @@ cd zola-web && npm run test     → 1 passed (Vitest)
 
 | Champ | Détail |
 |---|---|
-| **Statut** | ⏳ Prochain ticket |
+| **Statut** | ✅ Terminé |
+| **Objectif** | Table `users` conforme au schéma Zola, enums castés, Sanctum |
+| **Références** | docs/zola-schema-db.md table users, docs/SPECS.md §1 |
+
+#### Fichiers créés / modifiés
+- `zola-api/database/migrations/0001_01_01_000000_create_users_table.php` — colonnes exactes : `name(150)`, `phone(20) UNIQUE`, `email(150) NULL UNIQUE`, `password`, `role ENUM(admin,owner,superviseur)`, `status ENUM(pending,active,suspended) DEFAULT 'pending'` ; table `password_reset_tokens` Laravel supprimée (remplacée par `password_resets` custom en AUTH-04)
+- `zola-api/app/Enums/UserRole.php`, `app/Enums/UserStatus.php` — enums string PHP 8
+- `zola-api/app/Models/User.php` — `$fillable` complet, casts `role`/`status` vers enums, `password => hashed`, trait `HasApiTokens` (Sanctum)
+- `zola-api/database/factories/UserFactory.php` — phone camerounais 9 chiffres, states `admin()/owner()/superviseur()/pending()/suspended()`
+- `zola-api/database/seeders/InitialSeeder.php` — 3 comptes (un par rôle) : `admin@zola.test`, `owner@zola.test`, `superviseur@zola.test` / `password`, idempotent (`firstOrCreate`)
+- `zola-api/tests/Feature/Auth/UserModelTest.php` — 6 tests Pest (colonnes, casts enums, default status, hash password, unique phone, token Sanctum)
+- `zola-api/phpunit.xml` — tests sur MySQL `zola_test` (driver sqlite absent en local)
+- `scripts/ensure-test-database.php` — création base `zola_test`
+
+#### Validation
+```bash
+php artisan migrate:fresh --seed   # 4 migrations DONE + InitialSeeder DONE
+php artisan tinker tinker-auth01.php
+# role instanceof UserRole : true  (value: superviseur)
+# status instanceof Status : true  (value: pending)
+# password hashed (bcrypt) : true
+php artisan test                   # 8 passed (13 assertions)
+```
+
+#### Notes
+- Base de test dédiée `zola_test` (MySQL) car l'extension `pdo_sqlite` n'est pas activée en local.
+- `remember_token` et `email_verified_at` retirés : hors schéma Zola (API stateless Sanctum).
+
+#### Confirmation
+✅ AUTH-01 Done — Table users créée, enums fonctionnels
+
+---
 
 ## Historique des commits
 
@@ -265,7 +296,8 @@ cd zola-web && npm run test     → 1 passed (Vitest)
 | 2026-07-13 | INF-02 | feat(INF-02): config MySQL zola utf8mb4 | `25dc6ac` |
 | 2026-07-13 | INF-03 | feat(INF-03): init Nuxt 3 PWA Tailwind Pinia | `269a496` |
 | 2026-07-13 | INF-04 | feat(INF-04): environnement dev Docker + scripts + seed | `7e82c4d` |
-| 2026-07-13 | INF-05 | feat(INF-05): Pest backend + Vitest frontend TDD | (a pousser) |
+| 2026-07-13 | INF-05 | feat(INF-05): Pest backend + Vitest frontend TDD | `3973208` |
+| 2026-07-13 | AUTH-01 | feat(AUTH-01): migration users + enums + modèle User Sanctum | (voir git log) |
 
 ---
 
@@ -295,4 +327,4 @@ Pour chaque ticket :
 
 ## Backlog rapide
 
-Sprint 1 : ~~INF-01~~ ~~INF-05~~ → **AUTH-01** → AUTH-02 → …
+Sprint 1 : ~~INF-01~~ ~~INF-05~~ ~~AUTH-01~~ → **AUTH-02** → …

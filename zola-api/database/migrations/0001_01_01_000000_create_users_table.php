@@ -8,23 +8,21 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     *
+     * Schéma exact : docs/zola-schema-db.md table `users`.
+     * Un seul modèle User pour les 3 rôles (admin/owner/superviseur) — règle CLAUDE.md n°7.
      */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->string('name', 150);
+            $table->string('phone', 20)->unique();
+            $table->string('email', 150)->nullable()->unique();
             $table->string('password');
-            $table->rememberToken();
+            $table->enum('role', ['admin', 'owner', 'superviseur']);
+            $table->enum('status', ['pending', 'active', 'suspended'])->default('pending');
             $table->timestamps();
-        });
-
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
         });
 
         Schema::create('sessions', function (Blueprint $table) {
@@ -43,7 +41,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
     }
 };

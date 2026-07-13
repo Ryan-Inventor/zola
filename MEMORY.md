@@ -11,9 +11,9 @@
 | Champ | Valeur |
 |---|---|
 | **Dernière mise à jour** | 2026-07-13 |
-| **Ticket courant** | INF-03 (prochain) |
+| **Ticket courant** | INF-04 (prochain) |
 | **Sprint** | 1 — Setup + Auth |
-| **Tickets terminés** | 3 / 46 (BOOT-00 + INF-01 + INF-02) |
+| **Tickets terminés** | 4 / 46 (BOOT-00 + INF-01 + INF-02 + INF-03) |
 
 ### Structure du monorepo
 
@@ -22,7 +22,7 @@ Zola/
 ├── docs/              # Maquettes HTML + documentation
 ├── INSTRUCTIONS/      # Instructions projet + Campay
 ├── zola-api/          # Laravel API (INF-01 ✅)
-├── zola-web/          # Nuxt 3 PWA (à créer — INF-03)
+├── zola-web/          # Nuxt 3 PWA (INF-03 ✅)
 ├── MEMORY.md
 └── roadmap.md
 ```
@@ -147,6 +147,44 @@ MySQL 9.1.0 | Connection mysql | Database zola | Host 127.0.0.1 | Port 3306
 
 | Champ | Détail |
 |---|---|
+| **Statut** | ✅ Terminé |
+| **Objectif** | Nuxt 3 + Tailwind + Pinia + PWA, tokens marque Zola |
+
+#### Contexte / décisions
+- Template `nuxi init` installait Nuxt 4 → **rebasé sur Nuxt 3.21.8** (spec projet).
+- `tsconfig.json` corrigé (`extends .nuxt/tsconfig.json`) — le template Nuxt 4 référençait des fichiers inexistants.
+- Icônes PWA : placeholders depuis `docs/z1.PNG` / `z2.PNG`.
+
+#### Fichiers créés
+- `zola-web/package.json`, `nuxt.config.ts`, `tailwind.config.ts`, `postcss.config.js`
+- `zola-web/app.vue` — `<NuxtPage />` uniquement
+- `zola-web/assets/css/main.css` — Tailwind + chiffres tabulaires
+- `zola-web/pages/index.vue` — page d'accueil minimale
+- `zola-web/.env` / `.env.example` — `NUXT_PUBLIC_API_URL`
+- `zola-web/public/pwa-192x192.png`, `pwa-512x512.png`
+
+#### Config PWA
+- `name`: Zola, `theme_color`: `#F56001`, `background_color`: `#F4F4F5`
+- Service worker généré (workbox), `devOptions.enabled: true`
+
+#### Commandes exécutées
+```bash
+npx nuxi init zola-web -t minimal --packageManager npm --no-install -f --gitInit false
+npm install
+npm run build
+npm run dev
+curl.exe http://localhost:3000/ → 200
+```
+
+#### Confirmation
+✅ INF-03 Done — Nuxt 3 tourne, PWA configurée
+
+---
+
+### INF-04 — Environnement de dev
+
+| Champ | Détail |
+|---|---|
 | **Statut** | ⏳ Prochain ticket |
 
 ## Historique des commits
@@ -155,7 +193,8 @@ MySQL 9.1.0 | Connection mysql | Database zola | Host 127.0.0.1 | Port 3306
 |---|---|---|---|
 | 2026-07-13 | BOOT-00 | feat(BOOT-00): gouvernance projet | `7cd4bd9` |
 | 2026-07-13 | INF-01 | feat(INF-01): init Laravel API + Sanctum + JSON errors | `66ec4d5` |
-| 2026-07-13 | INF-02 | feat(INF-02): config MySQL zola utf8mb4 | (à pousser) |
+| 2026-07-13 | INF-02 | feat(INF-02): config MySQL zola utf8mb4 | `25dc6ac` |
+| 2026-07-13 | INF-03 | feat(INF-03): init Nuxt 3 PWA Tailwind Pinia | (à pousser) |
 
 ---
 
@@ -185,4 +224,4 @@ Pour chaque ticket :
 
 ## Backlog rapide
 
-Sprint 1 : ~~INF-01~~ ~~INF-02~~ → **INF-03** → INF-04 → INF-05 → AUTH-01 → …
+Sprint 1 : ~~INF-01~~ ~~INF-02~~ ~~INF-03~~ → **INF-04** → INF-05 → AUTH-01 → …

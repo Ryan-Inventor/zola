@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zola — Clôture de caisse</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  :root {
+    --orange:#F56001; --orange-dim:#FFF1E6;
+    --ink:#0A0A0A; --slate:#5C5C5E; --mist:#F4F4F5;
+    --white:#FFFFFF; --border:#E5E5E7;
+    --alert:#D14343; --alert-bg:#FBEAEA;
+    --success:#1E8E5A; --success-bg:#E8F5EE;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { min-height:100%; }
+  body {
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--mist); color:var(--ink);
+    font-feature-settings:"tnum" 1; -webkit-font-smoothing:antialiased;
+    padding-bottom:60px;
+  }
+  .topbar { display:flex; align-items:center; gap:14px; padding:20px 24px; max-width:560px; margin:0 auto; }
+  .back-btn { width:38px; height:38px; border-radius:12px; background:var(--white); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; text-decoration:none; color:var(--ink); font-size:16px; }
+  .topbar .title { font-size:18px; font-weight:800; }
+
+  .container { max-width:560px; margin:0 auto; padding:0 24px; display:flex; flex-direction:column; gap:18px; }
+
+  .summary-card { background:var(--ink); color:#fff; border-radius:18px; padding:20px; display:flex; justify-content:space-between; align-items:center; }
+  .summary-card .big { font-size:26px; font-weight:800; }
+  .summary-card .lbl { font-size:12px; color:#B8B8BA; margin-top:2px; }
+  .summary-card .divider { width:1px; height:36px; background:#3a3a3c; }
+
+  .count-block { background:var(--white); border-radius:18px; padding:18px; border:1.5px solid var(--border); }
+  .cb-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .cb-top .cb-label { font-size:13px; font-weight:700; }
+  .cb-top .cb-op { font-size:11px; font-weight:800; padding:3px 9px; border-radius:8px; }
+  .cb-op.cash { background:var(--success-bg); color:var(--success); }
+  .cb-op.om { background:#FFF1E6; color:#F56001; }
+  .cb-op.momo { background:#FFF9DB; color:#B8860B; }
+  .cb-theoretical { font-size:12px; color:var(--slate); margin-bottom:10px; }
+  .cb-theoretical b { color:var(--ink); font-weight:700; }
+  input[type=text] { width:100%; padding:13px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--white); font-family:'Inter',sans-serif; font-size:15px; font-weight:700; }
+  input:focus { outline:none; border-color:var(--orange); box-shadow:0 0 0 4px var(--orange-dim); }
+  .cb-ecart { display:flex; justify-content:space-between; align-items:center; margin-top:10px; font-size:12px; font-weight:700; }
+  .cb-ecart.ok { color:var(--success); }
+  .cb-ecart.bad { color:var(--alert); }
+  .cb-ecart.pending { color:var(--slate); }
+
+  .global-banner { border-radius:16px; padding:15px 18px; font-size:13px; font-weight:700; display:flex; align-items:center; gap:10px; }
+  .global-banner.ok { background:var(--success-bg); color:var(--success); }
+  .global-banner.bad { background:var(--alert-bg); color:var(--alert); }
+  .global-banner.pending { background:var(--white); color:var(--slate); border:1.5px solid var(--border); }
+
+  .field label { display:block; font-size:13px; font-weight:600; color:var(--ink); margin-bottom:8px; }
+  .field textarea {
+    width:100%; padding:13px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--white);
+    font-family:'Inter',sans-serif; font-size:14px; resize:vertical; min-height:70px;
+  }
+  .field textarea:focus { outline:none; border-color:var(--orange); box-shadow:0 0 0 4px var(--orange-dim); }
+  .field.required label::after { content:" *"; color:var(--alert); }
+
+  .btn { width:100%; padding:16px; border-radius:14px; border:none; font-family:'Inter',sans-serif; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .btn.primary { background:var(--orange); color:#fff; }
+  .btn.primary.warn-cta { background:var(--alert); }
+  .btn.primary:disabled { background:#F5C299; cursor:not-allowed; }
+  .btn.primary:not(:disabled):hover { opacity:0.92; }
+
+  .success-overlay { position:fixed; inset:0; background:rgba(10,10,10,0.4); display:none; align-items:center; justify-content:center; z-index:60; padding:20px; }
+  .success-overlay.show { display:flex; }
+  .success-card { background:var(--white); border-radius:22px; padding:32px 26px; text-align:center; max-width:340px; width:100%; }
+  .success-card .check { width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:26px; }
+  .success-card .check.ok { background:var(--success-bg); color:var(--success); }
+  .success-card .check.bad { background:var(--alert-bg); color:var(--alert); }
+  .success-card h3 { font-size:17px; font-weight:800; margin-bottom:6px; }
+  .success-card p { font-size:13px; color:var(--slate); margin-bottom:20px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="04-dashboard-owner-solo.html">&#8592;</a>
+  <div class="title">Clôture du jour</div>
+</div>
+
+<div class="container">
+
+  <div class="summary-card">
+    <div><div class="big">24</div><div class="lbl">Transactions</div></div>
+    <div class="divider"></div>
+    <div><div class="big">312 000</div><div class="lbl">FCFA traités</div></div>
+    <div class="divider"></div>
+    <div><div class="big">04/07</div><div class="lbl">Bonamoussadi</div></div>
+  </div>
+
+  <div class="count-block" data-key="cash">
+    <div class="cb-top"><span class="cb-label">Cash en caisse</span><span class="cb-op cash">CASH</span></div>
+    <div class="cb-theoretical">Solde théorique : <b>96 800 FCFA</b></div>
+    <input type="text" placeholder="Montant compté physiquement" inputmode="numeric">
+    <div class="cb-ecart pending">En attente de saisie</div>
+  </div>
+
+  <div class="count-block" data-key="om">
+    <div class="cb-top"><span class="cb-label">Orange Money</span><span class="cb-op om">OM</span></div>
+    <div class="cb-theoretical">Solde théorique : <b>184 200 FCFA</b></div>
+    <input type="text" placeholder="Solde électronique restant" inputmode="numeric">
+    <div class="cb-ecart pending">En attente de saisie</div>
+  </div>
+
+  <div class="count-block" data-key="momo">
+    <div class="cb-top"><span class="cb-label">MTN MoMo</span><span class="cb-op momo">MoMo</span></div>
+    <div class="cb-theoretical">Solde théorique : <b>31 000 FCFA</b></div>
+    <input type="text" placeholder="Solde électronique restant" inputmode="numeric">
+    <div class="cb-ecart pending">En attente de saisie</div>
+  </div>
+
+  <div class="global-banner pending" id="globalBanner">Renseignez les 3 soldes pour voir le résultat</div>
+
+  <div class="field" id="commentField">
+    <label for="comment">Commentaire</label>
+    <textarea id="comment" placeholder="Précisez la raison de l'écart si applicable..."></textarea>
+  </div>
+
+  <button class="btn primary" id="submitBtn" disabled>Clôturer la journée</button>
+</div>
+
+<div class="success-overlay" id="successOverlay">
+  <div class="success-card">
+    <div class="check" id="successCheck">&#10003;</div>
+    <h3 id="successTitle">Journée clôturée</h3>
+    <p id="successDetail">Aucun écart détecté — bonne journée !</p>
+    <a class="btn primary" href="04-dashboard-owner-solo.html">Retour au tableau de bord</a>
+  </div>
+</div>
+
+<script>
+  const theoretical = { cash: 96800, om: 184200, momo: 31000 };
+  const blocks = document.querySelectorAll('.count-block');
+  const globalBanner = document.getElementById('globalBanner');
+  const commentField = document.getElementById('commentField');
+  const comment = document.getElementById('comment');
+  const submitBtn = document.getElementById('submitBtn');
+
+  function fmt(n) { return new Intl.NumberFormat('fr-FR').format(n); }
+
+  function evaluate() {
+    let allFilled = true;
+    let anyGap = false;
+
+    blocks.forEach(block => {
+      const key = block.dataset.key;
+      const input = block.querySelector('input');
+      const ecartEl = block.querySelector('.cb-ecart');
+      const raw = input.value.replace(/\D/g,'');
+
+      if (raw === '') {
+        allFilled = false;
+        ecartEl.className = 'cb-ecart pending';
+        ecartEl.textContent = 'En attente de saisie';
+        return;
+      }
+      const counted = parseInt(raw, 10);
+      const gap = counted - theoretical[key];
+      if (gap === 0) {
+        ecartEl.className = 'cb-ecart ok';
+        ecartEl.textContent = '&#10003; Aucun écart';
+        ecartEl.innerHTML = '&#10003; Aucun écart';
+      } else {
+        anyGap = true;
+        ecartEl.className = 'cb-ecart bad';
+        const sign = gap > 0 ? '+' : '';
+        ecartEl.innerHTML = '&#9888; Écart : ' + sign + fmt(gap) + ' FCFA';
+      }
+    });
+
+    if (!allFilled) {
+      globalBanner.className = 'global-banner pending';
+      globalBanner.textContent = 'Renseignez les 3 soldes pour voir le résultat';
+      commentField.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.classList.remove('warn-cta');
+      submitBtn.textContent = 'Clôturer la journée';
+      return;
+    }
+
+    commentField.style.display = 'block';
+
+    if (anyGap) {
+      globalBanner.className = 'global-banner bad';
+      globalBanner.innerHTML = '&#9888; Un ou plusieurs écarts détectés — merci de commenter avant de clôturer';
+      submitBtn.classList.add('warn-cta');
+      submitBtn.textContent = 'Clôturer avec écart signalé';
+      submitBtn.disabled = comment.value.trim().length === 0;
+    } else {
+      globalBanner.className = 'global-banner ok';
+      globalBanner.innerHTML = '&#10003; Tous les soldes correspondent — aucune anomalie';
+      submitBtn.classList.remove('warn-cta');
+      submitBtn.textContent = 'Clôturer la journée';
+      submitBtn.disabled = false;
+    }
+  }
+
+  blocks.forEach(block => {
+    const input = block.querySelector('input');
+    input.addEventListener('input', () => {
+      input.value = input.value.replace(/[^0-9]/g,'');
+      evaluate();
+    });
+  });
+  comment.addEventListener('input', evaluate);
+
+  submitBtn.addEventListener('click', () => {
+    if (submitBtn.disabled) return;
+    const hasGap = document.querySelectorAll('.cb-ecart.bad').length > 0;
+    const check = document.getElementById('successCheck');
+    const title = document.getElementById('successTitle');
+    const detail = document.getElementById('successDetail');
+    if (hasGap) {
+      check.className = 'check bad'; check.innerHTML = '&#9888;';
+      title.textContent = 'Clôturée avec écart signalé';
+      detail.textContent = 'Le détail de l\'écart a été enregistré dans les rapports du point.';
+    } else {
+      check.className = 'check ok'; check.innerHTML = '&#10003;';
+      title.textContent = 'Journée clôturée';
+      detail.textContent = 'Aucun écart détecté — bonne journée !';
+    }
+    document.getElementById('successOverlay').classList.add('show');
+  });
+
+  evaluate();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zola — Équipe</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  :root {
+    --orange:#F56001; --orange-dim:#FFF1E6; --ink:#0A0A0A; --slate:#5C5C5E; --mist:#F4F4F5;
+    --white:#FFFFFF; --border:#E5E5E7; --success:#1E8E5A; --success-bg:#E8F5EE; --alert:#D14343; --alert-bg:#FBEAEA;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--mist); color:var(--ink); font-feature-settings:"tnum" 1; padding-bottom:60px; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; padding:20px 24px; max-width:900px; margin:0 auto; }
+  .topbar .left { display:flex; align-items:center; gap:14px; }
+  .back-btn { width:38px; height:38px; border-radius:12px; background:var(--white); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; text-decoration:none; color:var(--ink); font-size:16px; }
+  .topbar .title { font-size:18px; font-weight:800; }
+  .add-btn { background:var(--orange); color:#fff; font-size:13px; font-weight:700; padding:11px 18px; border-radius:12px; border:none; cursor:pointer; }
+
+  .container { max-width:900px; margin:0 auto; padding:0 24px; display:flex; flex-direction:column; gap:16px; }
+
+  .card { background:var(--white); border-radius:18px; padding:8px; border:1px solid var(--border); }
+  .team-row { display:flex; justify-content:space-between; align-items:center; padding:14px 14px; border-bottom:1px solid #F0F0F1; }
+  .team-row:last-child { border-bottom:none; }
+  .tr-left { display:flex; align-items:center; gap:12px; }
+  .tr-avatar { width:38px; height:38px; border-radius:50%; background:var(--ink); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
+  .tr-name { font-size:14px; font-weight:700; }
+  .tr-meta { font-size:12px; color:var(--slate); margin-top:1px; }
+  .tr-right { display:flex; align-items:center; gap:14px; }
+  .pill { font-size:11px; font-weight:700; padding:4px 10px; border-radius:100px; background:var(--success-bg); color:var(--success); }
+  .remove-link { font-size:12px; font-weight:700; color:var(--alert); cursor:pointer; background:none; border:none; }
+
+  .modal-overlay { position:fixed; inset:0; background:rgba(10,10,10,0.4); display:none; align-items:center; justify-content:center; z-index:60; padding:20px; }
+  .modal-overlay.show { display:flex; }
+  .modal { background:var(--white); border-radius:20px; padding:26px; max-width:420px; width:100%; max-height:90vh; overflow-y:auto; }
+  .modal h3 { font-size:16px; font-weight:800; margin-bottom:4px; }
+  .modal .modal-sub { font-size:12px; color:var(--slate); margin-bottom:18px; }
+  .modal .field { margin-bottom:14px; }
+  .modal label { display:block; font-size:13px; font-weight:600; margin-bottom:7px; }
+  .modal label .optional { font-weight:400; color:var(--slate); font-size:11px; }
+  .modal input, .modal select { width:100%; padding:13px 14px; border-radius:12px; border:1.5px solid var(--border); font-family:'Inter',sans-serif; font-size:14px; }
+  .modal input:focus, .modal select:focus { outline:none; border-color:var(--orange); box-shadow:0 0 0 4px var(--orange-dim); }
+
+  .pass-row { display:flex; gap:8px; }
+  .pass-row input { flex:1; font-family:'SF Mono', monospace; letter-spacing:0.5px; }
+  .pass-btn { background:var(--mist); border:1.5px solid var(--border); border-radius:12px; padding:0 14px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
+
+  .info-box { background:#FFF9DB; color:#8a6d00; font-size:12px; padding:12px 14px; border-radius:12px; margin-bottom:16px; line-height:1.4; }
+
+  .btn { width:100%; padding:14px; border-radius:12px; border:none; font-family:'Inter',sans-serif; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .btn.primary { background:var(--orange); color:#fff; }
+  .btn.whatsapp { background:#25D366; color:#fff; text-decoration:none; }
+  .btn.ghost { background:transparent; color:var(--slate); margin-bottom:0; }
+
+  .confirm-overlay { position:fixed; inset:0; background:rgba(10,10,10,0.4); display:none; align-items:center; justify-content:center; z-index:60; padding:20px; }
+  .confirm-overlay.show { display:flex; }
+  .confirm-box { background:var(--white); border-radius:18px; padding:24px; max-width:340px; text-align:center; }
+  .confirm-box p { font-size:14px; margin-bottom:18px; }
+  .confirm-actions { display:flex; gap:10px; }
+  .confirm-actions button { flex:1; padding:12px; border-radius:10px; border:none; font-family:'Inter',sans-serif; font-size:13px; font-weight:700; cursor:pointer; }
+  .confirm-actions .cancel { background:var(--mist); color:var(--ink); }
+  .confirm-actions .danger { background:var(--alert); color:#fff; }
+
+  .created-overlay { position:fixed; inset:0; background:rgba(10,10,10,0.4); display:none; align-items:center; justify-content:center; z-index:60; padding:20px; }
+  .created-overlay.show { display:flex; }
+  .created-box { background:var(--white); border-radius:20px; padding:28px; max-width:380px; width:100%; text-align:center; }
+  .created-box .check { width:56px; height:56px; border-radius:50%; background:var(--success-bg); color:var(--success); font-size:26px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
+  .created-box h3 { font-size:16px; font-weight:800; margin-bottom:14px; }
+  .cred-card { background:var(--mist); border-radius:14px; padding:16px; text-align:left; margin-bottom:16px; }
+  .cred-row { display:flex; justify-content:space-between; font-size:13px; padding:6px 0; }
+  .cred-row .lbl { color:var(--slate); }
+  .cred-row .val { font-weight:700; font-family:'SF Mono', monospace; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="left"><a class="back-btn" href="09-dashboard-owner-multi.html">&#8592;</a><div class="title">Équipe</div></div>
+  <button class="add-btn" id="openModal">+ Ajouter un superviseur</button>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="team-row">
+      <div class="tr-left"><div class="tr-avatar">BR</div><div><div class="tr-name">Brice R.</div><div class="tr-meta">Point : Ndokoti &middot; 6 91 23 45 67</div></div></div>
+      <div class="tr-right"><span class="pill">Actif</span><button class="remove-link">Retirer</button></div>
+    </div>
+    <div class="team-row">
+      <div class="tr-left"><div class="tr-avatar">SN</div><div><div class="tr-name">Sarah N.</div><div class="tr-meta">Point : Akwa &middot; 6 77 88 99 00</div></div></div>
+      <div class="tr-right"><span class="pill">Actif</span><button class="remove-link">Retirer</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>Ajouter un superviseur</h3>
+    <div class="modal-sub">Le téléphone ou l'email pourront servir d'identifiant de connexion.</div>
+    <div class="field"><label>Nom complet</label><input type="text" id="supName" placeholder="Ex: Paul Kamga"></div>
+    <div class="field"><label>Téléphone</label><input type="text" id="supPhone" placeholder="6 XX XX XX XX"></div>
+    <div class="field"><label>Email <span class="optional">(optionnel)</span></label><input type="text" id="supEmail" placeholder="ex@email.com"></div>
+    <div class="field"><label>Point à assigner</label>
+      <select id="supPoint"><option>Bonamoussadi</option><option>Ndokoti</option><option>Akwa</option></select>
+    </div>
+    <div class="field">
+      <label>Mot de passe temporaire</label>
+      <div class="pass-row">
+        <input type="text" id="supPass" value="zola-4821">
+        <button class="pass-btn" id="regenPass">Régénérer</button>
+      </div>
+    </div>
+    <div class="info-box">&#128172; Communiquez ces identifiants au superviseur. Il pourra changer son mot de passe après sa première connexion, avec son téléphone ou son email.</div>
+    <button class="btn primary" id="createAccess">Créer l'accès</button>
+    <button class="btn ghost" id="closeModal">Annuler</button>
+  </div>
+</div>
+
+<div class="created-overlay" id="createdOverlay">
+  <div class="created-box">
+    <div class="check">&#10003;</div>
+    <h3>Accès créé</h3>
+    <div class="cred-card">
+      <div class="cred-row"><span class="lbl">Nom</span><span class="val" id="credName">Paul Kamga</span></div>
+      <div class="cred-row"><span class="lbl">Téléphone</span><span class="val" id="credPhone">6 XX XX XX XX</span></div>
+      <div class="cred-row" id="credEmailRow"><span class="lbl">Email</span><span class="val" id="credEmail">—</span></div>
+      <div class="cred-row"><span class="lbl">Mot de passe</span><span class="val" id="credPass">zola-4821</span></div>
+    </div>
+    <a class="btn whatsapp" id="whatsappShare" href="#" target="_blank">&#128241; Partager par WhatsApp</a>
+    <button class="btn primary" id="closeCreated">Terminé</button>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <p id="confirmText">Retirer <b>Brice R.</b> de son point ? Il perdra immédiatement l'accès.</p>
+    <div class="confirm-actions">
+      <button class="cancel" id="cancelRemove">Annuler</button>
+      <button class="danger" id="confirmRemove">Retirer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const openModal = document.getElementById('openModal');
+  const modalOverlay = document.getElementById('modalOverlay');
+  const closeModal = document.getElementById('closeModal');
+  openModal.addEventListener('click', () => modalOverlay.classList.add('show'));
+  closeModal.addEventListener('click', () => modalOverlay.classList.remove('show'));
+
+  function genPassword() { return 'zola-' + Math.floor(1000 + Math.random()*9000); }
+  document.getElementById('regenPass').addEventListener('click', () => {
+    document.getElementById('supPass').value = genPassword();
+  });
+
+  const createdOverlay = document.getElementById('createdOverlay');
+  document.getElementById('createAccess').addEventListener('click', () => {
+    const name = document.getElementById('supName').value || 'Paul Kamga';
+    const phone = document.getElementById('supPhone').value || '6 XX XX XX XX';
+    const email = document.getElementById('supEmail').value;
+    const pass = document.getElementById('supPass').value;
+
+    document.getElementById('credName').textContent = name;
+    document.getElementById('credPhone').textContent = phone;
+    document.getElementById('credEmail').textContent = email || '—';
+    document.getElementById('credPass').textContent = pass;
+
+    const message = `Bonjour ${name}, voici vos identifiants Zola :\nTéléphone : ${phone}\nMot de passe : ${pass}\nVous pourrez le modifier à la première connexion.`;
+    const cleanPhone = phone.replace(/\D/g,'');
+    document.getElementById('whatsappShare').href = 'https://wa.me/237' + cleanPhone + '?text=' + encodeURIComponent(message);
+
+    modalOverlay.classList.remove('show');
+    createdOverlay.classList.add('show');
+  });
+  document.getElementById('closeCreated').addEventListener('click', () => createdOverlay.classList.remove('show'));
+
+  const confirmOverlay = document.getElementById('confirmOverlay');
+  const confirmText = document.getElementById('confirmText');
+  let targetRow = null;
+  document.querySelectorAll('.remove-link').forEach(btn => {
+    btn.addEventListener('click', () => {
+      targetRow = btn.closest('.team-row');
+      const name = targetRow.querySelector('.tr-name').textContent;
+      confirmText.innerHTML = 'Retirer <b>' + name + '</b> de son point ? Il perdra immédiatement l\'accès.';
+      confirmOverlay.classList.add('show');
+    });
+  });
+  document.getElementById('cancelRemove').addEventListener('click', () => confirmOverlay.classList.remove('show'));
+  document.getElementById('confirmRemove').addEventListener('click', () => {
+    if (targetRow) targetRow.remove();
+    confirmOverlay.classList.remove('show');
+  });
+</script>
+
+</body>
+</html>

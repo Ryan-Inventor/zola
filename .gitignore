@@ -1,0 +1,26 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Env secrets (never commit)
+.env
+.env.*
+!.env.example
+
+# Laravel (zola-api)
+zola-api/vendor/
+zola-api/node_modules/
+zola-api/storage/*.key
+zola-api/.phpunit.result.cache
+
+# Nuxt (zola-web)
+zola-web/node_modules/
+zola-web/.nuxt/
+zola-web/.output/
+zola-web/dist/

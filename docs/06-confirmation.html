@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zola — Transaction confirmée</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  :root {
+    --orange:#F56001; --ink:#0A0A0A; --slate:#5C5C5E; --mist:#F4F4F5;
+    --white:#FFFFFF; --border:#E5E5E7; --success:#1E8E5A; --success-bg:#E8F5EE;
+    --alert:#D14343; --alert-bg:#FBEAEA; --info:#B8860B; --info-bg:#FFF9DB;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; }
+  body {
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--mist); color:var(--ink); font-feature-settings:"tnum" 1;
+    display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;
+  }
+  .container { width:100%; max-width:400px; }
+
+  .day-stat { display:flex; justify-content:center; gap:6px; align-items:center; font-size:12px; color:var(--slate); margin-bottom:14px; font-weight:600; }
+  .day-stat b { color:var(--ink); }
+
+  .risk-ribbon { display:none; align-items:flex-start; gap:8px; background:var(--alert-bg); color:var(--alert); font-size:12px; font-weight:600; padding:10px 14px; border-radius:12px; margin-bottom:14px; line-height:1.4; }
+  .risk-ribbon.offline-flag { background:var(--info-bg); color:var(--info); }
+  .risk-ribbon.show { display:flex; }
+
+  .receipt { background:var(--white); border-radius:24px; padding:32px 28px; text-align:center; border:2px dashed var(--border); }
+  .check { width:60px; height:60px; border-radius:50%; background:var(--success-bg); color:var(--success); font-size:28px; display:flex; align-items:center; justify-content:center; margin:0 auto 18px; animation:pop .4s cubic-bezier(.34,1.56,.64,1); }
+  .check.risk { background:var(--alert-bg); color:var(--alert); }
+  @keyframes pop { from { transform:scale(0); opacity:0; } to { transform:scale(1); opacity:1; } }
+  .amt { font-size:32px; font-weight:800; margin-bottom:4px; letter-spacing:-0.01em; }
+  .type-op { font-size:13px; color:var(--slate); margin-bottom:16px; font-weight:600; }
+  .divider { border-top:1.5px dashed var(--border); margin:16px 0; }
+  .detail-row { display:flex; justify-content:space-between; font-size:13px; margin-bottom:9px; }
+  .detail-row:last-child { margin-bottom:0; }
+  .detail-row .lbl { color:var(--slate); }
+  .detail-row .val { font-weight:700; }
+  .detail-row .val.flag { color:var(--alert); }
+
+  .show-client-note { font-size:11px; color:var(--slate); text-align:center; margin-top:16px; font-style:italic; }
+
+  .btn { width:100%; padding:17px; border-radius:14px; border:none; font-family:'Inter',sans-serif; font-size:15px; font-weight:700; cursor:pointer; text-decoration:none; display:flex; align-items:center; justify-content:center; margin-top:18px; }
+  .btn.primary { background:var(--orange); color:#fff; }
+  .btn.primary:hover { opacity:0.92; }
+  .btn.secondary { background:transparent; color:var(--slate); font-weight:600; margin-top:6px; padding:10px; }
+
+  .demo-toggle { position:fixed; top:14px; left:14px; z-index:50; background:#1c1c1e; border-radius:12px; padding:8px; display:flex; gap:6px; box-shadow:0 6px 20px rgba(0,0,0,0.25); }
+  .demo-toggle button { background:transparent; border:1px solid #3a3a3c; color:#ccc; font-size:11px; padding:6px 10px; border-radius:8px; cursor:pointer; font-family:'Inter',sans-serif; }
+  .demo-toggle button.active { background:var(--orange); border-color:var(--orange); color:#fff; font-weight:700; }
+</style>
+</head>
+<body>
+
+<div class="demo-toggle">
+  <button class="active" data-mode="verified">Vérifiée</button>
+  <button data-mode="error">Nom non vérifié</button>
+  <button data-mode="offline">Hors ligne</button>
+</div>
+
+<div class="container">
+
+  <div class="day-stat">&#128337; <span><b id="dayCount">24</b> transactions aujourd'hui</span></div>
+
+  <div class="risk-ribbon" id="riskRibbon"></div>
+
+  <div class="receipt">
+    <div class="check" id="checkIcon">&#10003;</div>
+    <div class="amt">15 000 FCFA</div>
+    <div class="type-op">Dépôt — MTN MoMo</div>
+    <div class="divider"></div>
+    <div class="detail-row"><span class="lbl">Bénéficiaire</span><span class="val" id="benefName">NDONGO Paul E.</span></div>
+    <div class="detail-row"><span class="lbl">Numéro</span><span class="val">6 70 12 34 56</span></div>
+    <div class="detail-row"><span class="lbl">Date</span><span class="val">04/07/2026 — 14:32</span></div>
+    <div class="detail-row"><span class="lbl">Point</span><span class="val">Bonamoussadi</span></div>
+    <div class="detail-row" id="verifRow"><span class="lbl">Vérification</span><span class="val" id="verifVal">&#10003; Nom confirmé</span></div>
+  </div>
+
+  <div class="show-client-note">Cet écran peut être montré directement au client comme preuve de transaction.</div>
+
+  <a class="btn primary" href="05-nouvelle-transaction.html">+ Client suivant</a>
+  <a class="btn secondary" href="04-dashboard-owner-solo.html">Retour au tableau de bord</a>
+</div>
+
+<script>
+  const riskRibbon = document.getElementById('riskRibbon');
+  const checkIcon = document.getElementById('checkIcon');
+  const verifVal = document.getElementById('verifVal');
+
+  function setMode(mode) {
+    document.querySelectorAll('.demo-toggle button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    riskRibbon.className = 'risk-ribbon';
+    checkIcon.className = 'check';
+
+    if (mode === 'verified') {
+      riskRibbon.classList.remove('show');
+      checkIcon.innerHTML = '&#10003;';
+      verifVal.innerHTML = '&#10003; Nom confirmé';
+      verifVal.classList.remove('flag');
+    }
+    if (mode === 'error') {
+      riskRibbon.classList.add('show');
+      riskRibbon.innerHTML = '&#9888; Transaction confirmée sans correspondance de nom trouvée — pièce d\'identité à vérifier si ce n\'est pas déjà fait.';
+      checkIcon.classList.add('risk');
+      checkIcon.innerHTML = '&#9888;';
+      verifVal.innerHTML = '&#9888; Non vérifié (nom introuvable)';
+      verifVal.classList.add('flag');
+    }
+    if (mode === 'offline') {
+      riskRibbon.classList.add('show','offline-flag');
+      riskRibbon.innerHTML = '&#128225; Transaction confirmée sans vérification réseau disponible au moment de la saisie.';
+      checkIcon.classList.add('risk');
+      checkIcon.innerHTML = '&#128225;';
+      verifVal.innerHTML = '&#128225; Non vérifié (hors ligne)';
+      verifVal.classList.add('flag');
+    }
+  }
+  document.querySelectorAll('.demo-toggle button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+  // Lecture de l'état réel transmis depuis la page de transaction (si présent)
+  const params = new URLSearchParams(window.location.search);
+  const verified = params.get('verified');
+  if (verified === '0') {
+    const reason = params.get('reason');
+    setMode(reason === 'offline' ? 'offline' : 'error');
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zola — Rapports</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  :root {
+    --orange:#F56001; --orange-dim:#FFF1E6; --ink:#0A0A0A; --slate:#5C5C5E; --mist:#F4F4F5;
+    --white:#FFFFFF; --border:#E5E5E7; --success:#1E8E5A; --success-bg:#E8F5EE; --alert:#D14343; --alert-bg:#FBEAEA;
+    --info:#B8860B; --info-bg:#FFF9DB;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--mist); color:var(--ink); font-feature-settings:"tnum" 1; padding-bottom:60px; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; padding:20px 24px; max-width:1050px; margin:0 auto; flex-wrap:wrap; gap:10px; }
+  .topbar .left { display:flex; align-items:center; gap:14px; }
+  .back-btn { width:38px; height:38px; border-radius:12px; background:var(--white); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; text-decoration:none; color:var(--ink); font-size:16px; }
+  .topbar .title { font-size:18px; font-weight:800; }
+  .export-btn { background:var(--white); border:1.5px solid var(--border); color:var(--ink); font-size:13px; font-weight:700; padding:10px 16px; border-radius:12px; cursor:pointer; }
+
+  .container { max-width:1050px; margin:0 auto; padding:0 24px; display:flex; flex-direction:column; gap:18px; }
+
+  /* ---- Single unified filter bar ---- */
+  .filters-card { background:var(--white); border:1.5px solid var(--border); border-radius:16px; padding:10px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .period-group { display:flex; gap:6px; }
+  .period-group button { background:transparent; border:none; padding:9px 14px; border-radius:11px; font-family:'Inter',sans-serif; font-size:13px; font-weight:700; color:var(--slate); cursor:pointer; }
+  .period-group button.active { background:var(--ink); color:#fff; }
+  .filters-sep { width:1px; height:24px; background:var(--border); margin:0 4px; }
+  .custom-range { display:none; align-items:center; gap:6px; }
+  .custom-range.visible { display:flex; }
+  .custom-range input[type=date] { padding:8px 10px; border-radius:10px; border:1.5px solid var(--border); font-family:'Inter',sans-serif; font-size:12px; }
+  .custom-range span { font-size:12px; color:var(--slate); }
+  .filters-card select { padding:9px 12px; border-radius:11px; border:1.5px solid var(--border); background:var(--white); font-family:'Inter',sans-serif; font-size:13px; font-weight:600; margin-left:auto; }
+
+  .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .kpi-card { background:var(--white); border-radius:18px; padding:18px; border:1px solid var(--border); }
+  .kpi-card .lbl { font-size:12px; color:var(--slate); font-weight:600; margin-bottom:8px; }
+  .kpi-card .val { font-size:24px; font-weight:800; }
+  .kpi-card .trend { font-size:11px; font-weight:700; margin-top:6px; }
+  .kpi-card .trend.up { color:var(--success); }
+  .kpi-card .trend.down { color:var(--alert); }
+  .kpi-card .trend.neutral { color:var(--slate); }
+
+  .grid-2 { display:grid; grid-template-columns:2fr 1fr; gap:16px; }
+
+  .card { background:var(--white); border-radius:18px; padding:20px; border:1px solid var(--border); }
+  .card h4 { font-size:13px; font-weight:700; color:var(--slate); text-transform:uppercase; letter-spacing:0.03em; margin-bottom:16px; }
+
+  .chart-bars { display:flex; align-items:flex-end; gap:14px; height:160px; }
+  .chart-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:8px; height:100%; }
+  .chart-bar { width:70%; border-radius:8px 8px 0 0; background:var(--orange); }
+  .chart-col .day-lbl { font-size:11px; color:var(--slate); }
+
+  .split-row { display:flex; align-items:center; gap:16px; margin-bottom:16px; }
+  .split-row:last-child { margin-bottom:0; }
+  .split-bar-bg { flex:1; height:10px; border-radius:100px; background:var(--mist); overflow:hidden; }
+  .split-bar-fill { height:100%; }
+  .split-lbl { font-size:12px; font-weight:700; width:110px; }
+  .split-val { font-size:12px; color:var(--slate); width:70px; text-align:right; }
+
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; font-size:11px; text-transform:uppercase; color:var(--slate); padding:8px 6px; border-bottom:1px solid var(--border); font-weight:700; }
+  td { padding:12px 6px; border-bottom:1px solid #F0F0F1; }
+  tr:last-child td { border-bottom:none; }
+  .trend-up { color:var(--success); font-weight:700; font-size:12px; }
+  .trend-down { color:var(--alert); font-weight:700; font-size:12px; }
+  .gap-pill { font-size:11px; font-weight:700; padding:3px 8px; border-radius:100px; }
+  .gap-pill.ok { background:var(--success-bg); color:var(--success); }
+  .gap-pill.bad { background:var(--alert-bg); color:var(--alert); }
+  .best-tag { font-size:10px; font-weight:800; background:var(--success-bg); color:var(--success); padding:2px 8px; border-radius:100px; margin-left:6px; }
+  .worst-tag { font-size:10px; font-weight:800; background:var(--alert-bg); color:var(--alert); padding:2px 8px; border-radius:100px; margin-left:6px; }
+
+  @media (max-width:900px) { .kpi-grid { grid-template-columns:repeat(2,1fr); } .grid-2 { grid-template-columns:1fr; } .filters-card select { margin-left:0; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="left"><a class="back-btn" href="09-dashboard-owner-multi.html">&#8592;</a><div class="title">Rapports</div></div>
+  <button class="export-btn">&#11015; Exporter</button>
+</div>
+
+<div class="container">
+
+  <div class="filters-card">
+    <div class="period-group">
+      <button class="active" data-period="7j">7 jours</button>
+      <button data-period="30j">30 jours</button>
+      <button data-period="mois">Ce mois</button>
+      <button data-period="custom">Personnalisé</button>
+    </div>
+    <div class="custom-range" id="customRange">
+      <input type="date" id="dateFrom"><span>&#8594;</span><input type="date" id="dateTo">
+    </div>
+    <div class="filters-sep"></div>
+    <select><option>Tous les points</option><option>Bonamoussadi</option><option>Ndokoti</option><option>Akwa</option></select>
+    <select><option>Tous les opérateurs</option><option>Orange Money</option><option>MTN MoMo</option></select>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="lbl">Volume traité</div>
+      <div class="val">4 480 000 FCFA</div>
+      <div class="trend up">&#8599; +8% vs période précédente</div>
+    </div>
+    <div class="kpi-card">
+      <div class="lbl">Transactions</div>
+      <div class="val">316</div>
+      <div class="trend up">&#8599; +5% vs période précédente</div>
+    </div>
+    <div class="kpi-card">
+      <div class="lbl">Panier moyen</div>
+      <div class="val">14 177 FCFA</div>
+      <div class="trend neutral">&#8776; Stable vs période précédente</div>
+    </div>
+    <div class="kpi-card">
+      <div class="lbl">Écarts de caisse cumulés</div>
+      <div class="val" style="color:var(--alert);">− 8 500 FCFA</div>
+      <div class="trend down">1 incident signalé</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>Volume de transactions — période sélectionnée</h4>
+      <div class="chart-bars">
+        <div class="chart-col"><div class="chart-bar" style="height:55%"></div><span class="day-lbl">Lun</span></div>
+        <div class="chart-col"><div class="chart-bar" style="height:70%"></div><span class="day-lbl">Mar</span></div>
+        <div class="chart-col"><div class="chart-bar" style="height:45%"></div><span class="day-lbl">Mer</span></div>
+        <div class="chart-col"><div class="chart-bar" style="height:80%"></div><span class="day-lbl">Jeu</span></div>
+        <div class="chart-col"><div class="chart-bar" style="height:95%"></div><span class="day-lbl">Ven</span></div>
+        <div class="chart-col"><div class="chart-bar" style="height:100%"></div><span class="day-lbl">Sam</span></div>
+        <div class="chart-col"><div class="chart-bar" style="height:60%"></div><span class="day-lbl">Dim</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4>Répartition</h4>
+      <div class="split-row">
+        <span class="split-lbl">Dépôts</span>
+        <div class="split-bar-bg"><div class="split-bar-fill" style="width:68%;background:var(--success);"></div></div>
+        <span class="split-val">68%</span>
+      </div>
+      <div class="split-row">
+        <span class="split-lbl">Retraits</span>
+        <div class="split-bar-bg"><div class="split-bar-fill" style="width:32%;background:var(--ink);"></div></div>
+        <span class="split-val">32%</span>
+      </div>
+      <div class="split-row">
+        <span class="split-lbl">Orange Money</span>
+        <div class="split-bar-bg"><div class="split-bar-fill" style="width:58%;background:var(--orange);"></div></div>
+        <span class="split-val">58%</span>
+      </div>
+      <div class="split-row">
+        <span class="split-lbl">MTN MoMo</span>
+        <div class="split-bar-bg"><div class="split-bar-fill" style="width:42%;background:var(--info);"></div></div>
+        <span class="split-val">42%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>Comparaison par point</h4>
+    <table>
+      <tr><th>Point</th><th>Transactions</th><th>Volume</th><th>Tendance</th><th>Écarts caisse</th></tr>
+      <tr><td>Bonamoussadi <span class="best-tag">Meilleur</span></td><td>142</td><td>2 100 000 FCFA</td><td class="trend-up">&#8599; +8%</td><td><span class="gap-pill ok">0</span></td></tr>
+      <tr><td>Ndokoti <span class="worst-tag">À surveiller</span></td><td>98</td><td>1 400 000 FCFA</td><td class="trend-down">&#8600; −12%</td><td><span class="gap-pill bad">1</span></td></tr>
+      <tr><td>Akwa</td><td>76</td><td>980 000 FCFA</td><td class="trend-up">&#8599; +3%</td><td><span class="gap-pill ok">0</span></td></tr>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  const periodButtons = document.querySelectorAll('.period-group button');
+  const customRange = document.getElementById('customRange');
+  periodButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      periodButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      customRange.classList.toggle('visible', btn.dataset.period === 'custom');
+    });
+  });
+</script>
+
+</body>
+</html>

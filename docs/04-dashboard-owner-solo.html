@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zola — Mon point</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  :root {
+    --orange:#F56001; --orange-dim:#FFF1E6;
+    --ink:#0A0A0A; --slate:#5C5C5E; --mist:#F4F4F5;
+    --night:#111113; --white:#FFFFFF; --border:#E5E5E7;
+    --alert:#D14343; --alert-bg:#FBEAEA;
+    --success:#1E8E5A; --success-bg:#E8F5EE;
+    --info:#B8860B; --info-bg:#FFF9DB;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { min-height:100%; }
+  body {
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--mist); color:var(--ink);
+    font-feature-settings:"tnum" 1; -webkit-font-smoothing:antialiased;
+    padding-bottom:110px;
+  }
+
+  /* ---- Demo control (not part of the product) ---- */
+  .demo-toggle {
+    position:fixed; top:14px; left:14px; z-index:50;
+    background:#1c1c1e; border-radius:12px; padding:8px; display:flex; gap:6px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.25);
+  }
+  .demo-toggle button {
+    background:transparent; border:1px solid #3a3a3c; color:#ccc; font-size:11px;
+    padding:6px 10px; border-radius:8px; cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .demo-toggle button.active { background:var(--orange); border-color:var(--orange); color:#fff; font-weight:700; }
+
+  /* ---- Topbar ---- */
+  .topbar {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:20px 24px; max-width:1100px; margin:0 auto;
+  }
+  .topbar .title-wrap .title { font-size:24px; font-weight:800; letter-spacing:-0.01em; }
+  .topbar .title-wrap .sub { font-size:13px; color:var(--slate); margin-top:2px; }
+  .topbar .actions { display:flex; align-items:center; gap:14px; }
+  .icon-btn {
+    width:40px; height:40px; border-radius:12px; background:var(--white); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; font-size:16px;
+  }
+  .icon-btn .dot { position:absolute; top:8px; right:8px; width:8px; height:8px; border-radius:50%; background:var(--alert); border:2px solid var(--mist); }
+  .avatar { width:40px; height:40px; border-radius:50%; background:var(--ink); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; cursor:pointer; }
+
+  .container { max-width:1100px; margin:0 auto; padding:0 24px; display:flex; flex-direction:column; gap:20px; }
+
+  /* ---- Alert banner ---- */
+  .alert-banner {
+    border-radius:16px; padding:15px 18px; font-size:14px; font-weight:600;
+    display:flex; gap:12px; align-items:center; justify-content:space-between;
+  }
+  .alert-banner.warn { background:var(--alert-bg); color:var(--alert); }
+  .alert-banner .left { display:flex; align-items:center; gap:10px; }
+  .alert-banner .cta { font-size:13px; font-weight:700; text-decoration:underline; cursor:pointer; white-space:nowrap; }
+  .alert-banner.hidden { display:none; }
+
+  /* ---- Float cards ---- */
+  .float-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+  .float-card { background:var(--white); border-radius:20px; padding:22px; border:1px solid var(--border); }
+  .float-card .fc-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .float-card .fc-label { font-size:13px; color:var(--slate); font-weight:600; }
+  .float-card .fc-op { font-size:11px; font-weight:800; padding:4px 10px; border-radius:8px; }
+  .float-card .fc-op.om { background:#FFF1E6; color:#F56001; }
+  .float-card .fc-op.momo { background:#FFF9DB; color:#B8860B; }
+  .float-card .fc-op.cash { background:#E8F5EE; color:#1E8E5A; }
+  .float-card .fc-amount { font-size:30px; font-weight:800; margin-bottom:14px; letter-spacing:-0.01em; }
+  .gbar { height:9px; background:var(--mist); border-radius:100px; overflow:hidden; margin-bottom:10px; }
+  .gbar .fill { height:100%; border-radius:100px; transition:width .3s ease; }
+  .fc-bottom { display:flex; justify-content:space-between; align-items:center; }
+  .fc-status { font-size:12px; font-weight:700; display:flex; align-items:center; gap:5px; }
+  .fc-status.ok { color:var(--success); }
+  .fc-status.low { color:var(--alert); }
+  .fc-link { font-size:12px; font-weight:700; color:var(--orange); cursor:pointer; text-decoration:none; }
+  .fc-link:hover { text-decoration:underline; }
+
+  /* ---- Quick actions ---- */
+  .quick-actions { display:grid; grid-template-columns:2fr 1fr 1fr; gap:12px; }
+  .qa-btn {
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    padding:16px; border-radius:16px; font-size:14px; font-weight:700; cursor:pointer;
+    text-decoration:none; border:none; transition:opacity .15s ease, transform .1s ease;
+  }
+  .qa-btn:active { transform:scale(0.99); }
+  .qa-btn.primary { background:var(--orange); color:#fff; }
+  .qa-btn.primary:hover { opacity:0.92; }
+  .qa-btn.secondary { background:var(--white); color:var(--ink); border:1.5px solid var(--border); }
+  .qa-btn.secondary:hover { border-color:#c9c9cc; }
+
+  /* ---- Transactions card ---- */
+  .card { background:var(--white); border-radius:20px; padding:22px; border:1px solid var(--border); }
+  .card-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .card-head h3 { font-size:15px; font-weight:700; }
+  .card-head .link { font-size:13px; font-weight:700; color:var(--orange); text-decoration:none; cursor:pointer; }
+
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.03em; color:var(--slate); padding:8px 6px; border-bottom:1px solid var(--border); font-weight:700; }
+  td { padding:12px 6px; border-bottom:1px solid #F0F0F1; }
+  tr:last-child td { border-bottom:none; }
+  .op-pill { font-size:10px; font-weight:800; padding:3px 8px; border-radius:100px; }
+  .op-pill.om { background:#FFF1E6; color:#F56001; }
+  .op-pill.momo { background:#FFF9DB; color:#B8860B; }
+  .type-pill { font-size:11px; font-weight:600; }
+  .type-pill.deposit { color:var(--success); }
+  .type-pill.withdraw { color:var(--ink); }
+
+  /* ---- Empty state ---- */
+  .empty-state { text-align:center; padding:40px 20px; }
+  .empty-state .ic { width:56px; height:56px; border-radius:50%; background:var(--mist); color:var(--slate); font-size:24px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
+  .empty-state h4 { font-size:15px; font-weight:700; margin-bottom:6px; }
+  .empty-state p { font-size:13px; color:var(--slate); margin-bottom:18px; }
+  .empty-state .btn-inline { display:inline-block; background:var(--orange); color:#fff; font-size:13px; font-weight:700; padding:10px 18px; border-radius:12px; text-decoration:none; }
+
+  /* ---- Dock ---- */
+  .dock {
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    display:flex; gap:8px; background:rgba(255,255,255,0.6);
+    backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);
+    border:1px solid rgba(255,255,255,0.7); border-radius:24px; padding:10px 12px;
+    box-shadow:0 10px 34px rgba(0,0,0,0.18); z-index:30;
+  }
+  .dock .dicon {
+    width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+    font-size:18px; cursor:pointer; background:rgba(10,10,10,0.06); color:var(--ink);
+    transition:transform .15s ease; text-decoration:none;
+  }
+  .dock .dicon.active { background:var(--orange); color:#fff; transform:translateY(-8px); box-shadow:0 8px 18px rgba(245,96,1,0.45); }
+  .dock .dicon:hover { transform:translateY(-4px); }
+  .dock .dicon .lbl { display:none; }
+
+  /* ---- Responsive ---- */
+  @media (max-width: 900px) {
+    .float-grid { grid-template-columns:1fr; }
+    .quick-actions { grid-template-columns:1fr; }
+    .topbar .title-wrap .title { font-size:20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="demo-toggle">
+  <button class="active" data-state="normal">Normal</button>
+  <button data-state="empty">Vide</button>
+  <button data-state="critical">Float critique</button>
+</div>
+
+<div class="topbar">
+  <div class="title-wrap">
+    <div class="title">Bonamoussadi</div>
+    <div class="sub">Votre point</div>
+  </div>
+  <div class="actions">
+    <a class="icon-btn" title="Notifications" href="16-notifications.html" style="text-decoration:none;">&#128276;<span class="dot" id="notifDot"></span></a>
+    <a class="avatar" title="Marlyse K." href="15-profil.html" style="text-decoration:none;">MK</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="alert-banner warn" id="alertBanner">
+    <div class="left">&#9888; <span id="alertText">Float MTN MoMo bas — réapprovisionnement recommandé</span></div>
+    <span class="cta">Réapprovisionner</span>
+  </div>
+
+  <div class="float-grid">
+    <div class="float-card">
+      <div class="fc-top"><span class="fc-label">Cash en caisse</span><span class="fc-op cash">CASH</span></div>
+      <div class="fc-amount" id="cashAmount">96 800 FCFA</div>
+      <div class="gbar"><div class="fill" id="cashFill" style="background:var(--success);width:55%"></div></div>
+      <div class="fc-bottom">
+        <span class="fc-status ok" id="cashStatus">&#9679; Niveau normal</span>
+        <a class="fc-link" href="07-reapprovisionnement.html">Réapprovisionner</a>
+      </div>
+    </div>
+    <div class="float-card">
+      <div class="fc-top"><span class="fc-label">Float Orange Money</span><span class="fc-op om">OM</span></div>
+      <div class="fc-amount" id="omAmount">184 200 FCFA</div>
+      <div class="gbar"><div class="fill" id="omFill" style="background:var(--success);width:74%"></div></div>
+      <div class="fc-bottom">
+        <span class="fc-status ok" id="omStatus">&#9679; Liquidité saine</span>
+        <a class="fc-link" href="07-reapprovisionnement.html">Réapprovisionner</a>
+      </div>
+    </div>
+    <div class="float-card">
+      <div class="fc-top"><span class="fc-label">Float MTN MoMo</span><span class="fc-op momo">MoMo</span></div>
+      <div class="fc-amount" id="momoAmount">31 000 FCFA</div>
+      <div class="gbar"><div class="fill" id="momoFill" style="background:var(--alert);width:16%"></div></div>
+      <div class="fc-bottom">
+        <span class="fc-status low" id="momoStatus">&#9679; Réapprovisionnement recommandé</span>
+        <a class="fc-link" href="07-reapprovisionnement.html">Réapprovisionner</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <a class="qa-btn primary" href="05-nouvelle-transaction.html">+ Nouvelle transaction</a>
+    <a class="qa-btn secondary" href="07-reapprovisionnement.html">Réapprovisionner</a>
+    <a class="qa-btn secondary" href="08-cloture-caisse.html">Clôturer la caisse</a>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h3>Transactions du jour</h3>
+      <a class="link" href="14-historique-transactions.html">Voir tout l'historique</a>
+    </div>
+
+    <div id="txnTableWrap">
+      <table>
+        <tr><th>Client</th><th>Type</th><th>Montant</th><th>Opérateur</th><th>Heure</th></tr>
+        <tr><td>N. Fotso</td><td><span class="type-pill deposit">Dépôt</span></td><td>15 000</td><td><span class="op-pill om">OM</span></td><td>14:32</td></tr>
+        <tr><td>P. Ateba</td><td><span class="type-pill withdraw">Retrait</span></td><td>8 000</td><td><span class="op-pill momo">MoMo</span></td><td>13:58</td></tr>
+        <tr><td>R. Biya E.</td><td><span class="type-pill deposit">Dépôt</span></td><td>50 000</td><td><span class="op-pill om">OM</span></td><td>12:10</td></tr>
+        <tr><td>S. Nguemo</td><td><span class="type-pill deposit">Dépôt</span></td><td>12 500</td><td><span class="op-pill momo">MoMo</span></td><td>11:45</td></tr>
+      </table>
+    </div>
+
+    <div id="txnEmptyWrap" class="empty-state hidden">
+      <div class="ic">&#128179;</div>
+      <h4>Aucune transaction aujourd'hui pour l'instant</h4>
+      <p>Vos transactions apparaîtront ici au fur et à mesure.</p>
+      <a class="btn-inline" href="05-nouvelle-transaction.html">+ Nouvelle transaction</a>
+    </div>
+  </div>
+
+</div>
+
+<div class="dock">
+  <a class="dicon active" href="04-dashboard-owner-solo.html">&#8962;</a>
+  <a class="dicon" href="05-nouvelle-transaction.html">&#65291;</a>
+  <a class="dicon" href="07-reapprovisionnement.html">&#128176;</a>
+  <a class="dicon" href="14-historique-transactions.html">&#128202;</a>
+</div>
+
+<script>
+  const buttons = document.querySelectorAll('.demo-toggle button');
+  const alertBanner = document.getElementById('alertBanner');
+  const alertText = document.getElementById('alertText');
+  const cashAmount = document.getElementById('cashAmount');
+  const cashFill = document.getElementById('cashFill');
+  const cashStatus = document.getElementById('cashStatus');
+  const omAmount = document.getElementById('omAmount');
+  const omFill = document.getElementById('omFill');
+  const omStatus = document.getElementById('omStatus');
+  const momoAmount = document.getElementById('momoAmount');
+  const momoFill = document.getElementById('momoFill');
+  const momoStatus = document.getElementById('momoStatus');
+  const txnTableWrap = document.getElementById('txnTableWrap');
+  const txnEmptyWrap = document.getElementById('txnEmptyWrap');
+  const notifDot = document.getElementById('notifDot');
+
+  function setState(state) {
+    buttons.forEach(b => b.classList.toggle('active', b.dataset.state === state));
+
+    if (state === 'normal') {
+      alertBanner.classList.remove('hidden');
+      txnTableWrap.classList.remove('hidden');
+      txnEmptyWrap.classList.add('hidden');
+      notifDot.style.display = 'block';
+      cashAmount.textContent = '96 800 FCFA'; cashFill.style.width = '55%'; cashFill.style.background = 'var(--success)';
+      cashStatus.className = 'fc-status ok'; cashStatus.innerHTML = '&#9679; Niveau normal';
+      omAmount.textContent = '184 200 FCFA'; omFill.style.width = '74%'; omFill.style.background = 'var(--success)';
+      omStatus.className = 'fc-status ok'; omStatus.innerHTML = '&#9679; Liquidité saine';
+      momoAmount.textContent = '31 000 FCFA'; momoFill.style.width = '16%'; momoFill.style.background = 'var(--alert)';
+      momoStatus.className = 'fc-status low'; momoStatus.innerHTML = '&#9679; Réapprovisionnement recommandé';
+    }
+
+    if (state === 'empty') {
+      alertBanner.classList.add('hidden');
+      txnTableWrap.classList.add('hidden');
+      txnEmptyWrap.classList.remove('hidden');
+      notifDot.style.display = 'none';
+      cashAmount.textContent = '0 FCFA'; cashFill.style.width = '0%';
+      cashStatus.className = 'fc-status ok'; cashStatus.innerHTML = '&#9679; Point non encore initialisé';
+      omAmount.textContent = '0 FCFA'; omFill.style.width = '0%';
+      omStatus.className = 'fc-status ok'; omStatus.innerHTML = '&#9679; Point non encore initialisé';
+      momoAmount.textContent = '0 FCFA'; momoFill.style.width = '0%';
+      momoStatus.className = 'fc-status ok'; momoStatus.innerHTML = '&#9679; Point non encore initialisé';
+    }
+
+    if (state === 'critical') {
+      alertBanner.classList.remove('hidden');
+      alertText.textContent = 'Float Orange Money ET MTN MoMo critiques — vous risquez de ne plus pouvoir servir vos clients';
+      txnTableWrap.classList.remove('hidden');
+      txnEmptyWrap.classList.add('hidden');
+      notifDot.style.display = 'block';
+      cashAmount.textContent = '512 000 FCFA'; cashFill.style.width = '96%'; cashFill.style.background = 'var(--alert)';
+      cashStatus.className = 'fc-status low'; cashStatus.innerHTML = '&#9679; Élevé — envisager un dépôt bancaire';
+      omAmount.textContent = '4 200 FCFA'; omFill.style.width = '4%'; omFill.style.background = 'var(--alert)';
+      omStatus.className = 'fc-status low'; omStatus.innerHTML = '&#9679; Critique — réapprovisionner immédiatement';
+      momoAmount.textContent = '2 000 FCFA'; momoFill.style.width = '2%'; momoFill.style.background = 'var(--alert)';
+      momoStatus.className = 'fc-status low'; momoStatus.innerHTML = '&#9679; Critique — réapprovisionner immédiatement';
+    }
+  }
+
+  buttons.forEach(b => b.addEventListener('click', () => setState(b.dataset.state)));
+</script>
+
+</body>
+</html>

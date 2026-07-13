@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zola — Nouvelle transaction</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  :root {
+    --orange:#F56001; --orange-dim:#FFF1E6;
+    --ink:#0A0A0A; --slate:#5C5C5E; --mist:#F4F4F5;
+    --white:#FFFFFF; --border:#E5E5E7;
+    --alert:#D14343; --alert-bg:#FBEAEA;
+    --success:#1E8E5A; --success-bg:#E8F5EE;
+    --info:#B8860B; --info-bg:#FFF9DB;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { min-height:100%; }
+  body {
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--mist); color:var(--ink);
+    font-feature-settings:"tnum" 1; -webkit-font-smoothing:antialiased;
+    padding-bottom:110px;
+  }
+
+  .demo-toggle {
+    position:fixed; top:14px; left:14px; z-index:50;
+    background:#1c1c1e; border-radius:12px; padding:8px; display:flex; gap:6px; flex-wrap:wrap; max-width:260px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.25);
+  }
+  .demo-toggle .lbl { color:#888; font-size:10px; width:100%; margin-bottom:4px; }
+  .demo-toggle button { background:transparent; border:1px solid #3a3a3c; color:#ccc; font-size:11px; padding:6px 10px; border-radius:8px; cursor:pointer; font-family:'Inter',sans-serif; }
+  .demo-toggle button.active { background:var(--orange); border-color:var(--orange); color:#fff; font-weight:700; }
+
+  .topbar { display:flex; align-items:center; gap:14px; padding:20px 24px; max-width:560px; margin:0 auto; }
+  .back-btn { width:38px; height:38px; border-radius:12px; background:var(--white); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; text-decoration:none; color:var(--ink); font-size:16px; }
+  .topbar .title { font-size:18px; font-weight:800; }
+
+  .container { max-width:560px; margin:0 auto; padding:0 24px; display:flex; flex-direction:column; gap:18px; }
+
+  .segmented { display:flex; background:var(--white); border:1.5px solid var(--border); border-radius:16px; padding:5px; }
+  .segmented button {
+    flex:1; padding:13px; border:none; background:transparent; border-radius:12px;
+    font-family:'Inter',sans-serif; font-size:14px; font-weight:700; color:var(--slate); cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .segmented button.active.deposit { background:var(--success); color:#fff; }
+  .segmented button.active.withdraw { background:var(--ink); color:#fff; }
+
+  .field { position:relative; }
+  .field label { display:block; font-size:13px; font-weight:600; color:var(--ink); margin-bottom:8px; }
+  input[type=tel], input[type=text] {
+    width:100%; padding:15px 16px; border-radius:14px; border:1.5px solid var(--border); background:var(--white);
+    font-family:'Inter',sans-serif; font-size:17px; color:var(--ink); transition:border-color .15s ease, box-shadow .15s ease;
+    letter-spacing:0.5px;
+  }
+  input::placeholder { color:#B4B4B6; letter-spacing:normal; }
+  input:focus { outline:none; border-color:var(--orange); box-shadow:0 0 0 4px var(--orange-dim); }
+  input.error { border-color:var(--alert); }
+  input.success-b { border-color:var(--success); }
+
+  .suggest-list {
+    position:absolute; top:calc(100% + 6px); left:0; right:0; background:var(--white);
+    border:1.5px solid var(--border); border-radius:14px; box-shadow:0 12px 28px rgba(0,0,0,0.12);
+    z-index:20; overflow:hidden; max-height:260px; overflow-y:auto;
+  }
+  .suggest-list.hidden { display:none; }
+  .suggest-item { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; cursor:pointer; border-bottom:1px solid #F0F0F1; }
+  .suggest-item:last-child { border-bottom:none; }
+  .suggest-item:hover { background:var(--mist); }
+  .suggest-item .si-left { display:flex; flex-direction:column; gap:2px; }
+  .suggest-item .si-name { font-size:13px; font-weight:700; }
+  .suggest-item .si-num { font-size:12px; color:var(--slate); }
+  .suggest-item .si-op { font-size:10px; font-weight:800; padding:3px 8px; border-radius:100px; }
+  .suggest-item .si-op.om { background:#FFF1E6; color:#F56001; }
+  .suggest-item .si-op.momo { background:var(--info-bg); color:var(--info); }
+  .suggest-empty { padding:14px 16px; font-size:12px; color:var(--slate); text-align:center; }
+
+  /* ---- Inline beneficiary verification ---- */
+  .beneficiary-inline { border-radius:16px; padding:16px 18px; border:2px solid var(--border); background:var(--white); transition:all .2s ease; }
+  .beneficiary-inline.hidden { display:none; }
+  .beneficiary-inline.loading { border-style:dashed; }
+  .beneficiary-inline.found { border-color:var(--success); background:var(--success-bg); }
+  .beneficiary-inline.error { border-color:var(--alert); background:var(--alert-bg); }
+  .beneficiary-inline.offline { border-color:var(--info); background:var(--info-bg); }
+  .bi-row { display:flex; align-items:center; gap:12px; }
+  .bi-icon { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+  .beneficiary-inline.loading .bi-icon { background:var(--mist); color:var(--slate); }
+  .beneficiary-inline.found .bi-icon { background:var(--success); color:#fff; }
+  .beneficiary-inline.error .bi-icon { background:var(--alert); color:#fff; }
+  .beneficiary-inline.offline .bi-icon { background:var(--info); color:#fff; }
+  .bi-text .bi-name { font-size:15px; font-weight:800; }
+  .bi-text .bi-name.small { font-size:13px; font-weight:700; }
+  .bi-text .bi-sub { font-size:11px; color:var(--slate); margin-top:1px; }
+  .spinner-sm { width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--slate); border-radius:50%; animation:spin .7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .bi-note { font-size:12px; margin-top:10px; padding-top:10px; border-top:1px dashed rgba(0,0,0,0.1); line-height:1.4; }
+  .beneficiary-inline.error .bi-note { color:var(--alert); }
+  .beneficiary-inline.offline .bi-note { color:var(--info); }
+
+  .amount-input { position:relative; }
+  .amount-input input { font-size:24px; font-weight:800; padding-right:70px; letter-spacing:normal; }
+  .amount-input .suffix { position:absolute; right:16px; top:50%; transform:translateY(-50%); font-size:14px; color:var(--slate); font-weight:600; }
+
+  .quick-amounts { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+  .quick-amounts button {
+    background:var(--white); border:1.5px solid var(--border); border-radius:100px; padding:8px 16px;
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:700; color:var(--ink); cursor:pointer;
+    display:flex; align-items:center; gap:6px;
+  }
+  .quick-amounts button:hover { border-color:var(--orange); color:var(--orange); }
+  .quick-amounts button.selected { background:var(--orange); border-color:var(--orange); color:#fff; }
+  .quick-amounts button.usual { border-color:var(--success); color:var(--success); }
+  .quick-amounts button.usual .tag { font-size:9px; background:var(--success); color:#fff; padding:1px 5px; border-radius:6px; }
+  .quick-amounts button.usual.selected .tag { background:#fff; color:var(--success); }
+  .amounts-hint { font-size:11px; color:var(--slate); margin-top:8px; }
+
+  .error-msg { display:flex; align-items:center; gap:8px; background:var(--alert-bg); color:var(--alert); font-size:13px; font-weight:600; padding:12px 14px; border-radius:12px; }
+  .hidden { display:none !important; }
+
+  .btn { width:100%; padding:16px; border-radius:14px; border:none; font-family:'Inter',sans-serif; font-size:14px; font-weight:700; cursor:pointer; text-decoration:none; display:flex; align-items:center; justify-content:center; text-align:center; line-height:1.3; }
+  .btn.primary { background:var(--orange); color:#fff; }
+  .btn.primary:disabled { background:#F5C299; cursor:not-allowed; }
+  .btn.primary:not(:disabled):hover { opacity:0.92; }
+  .btn.danger-cta { background:var(--alert); color:#fff; }
+  .btn.danger-cta:hover { opacity:0.92; }
+
+  .dock {
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    display:flex; gap:8px; background:rgba(255,255,255,0.6);
+    backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);
+    border:1px solid rgba(255,255,255,0.7); border-radius:24px; padding:10px 12px;
+    box-shadow:0 10px 34px rgba(0,0,0,0.18);
+  }
+  .dock .dicon {
+    width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+    font-size:18px; cursor:pointer; background:rgba(10,10,10,0.06); color:var(--ink); transition:transform .15s ease;
+  }
+  .dock .dicon.active { background:var(--orange); color:#fff; transform:translateY(-8px); box-shadow:0 8px 18px rgba(245,96,1,0.45); }
+</style>
+</head>
+<body>
+
+<div class="demo-toggle">
+  <div class="lbl">Simuler le résultat de vérification :</div>
+  <button class="active" data-sim="found">Nom trouvé</button>
+  <button data-sim="error">Introuvable</button>
+  <button data-sim="offline">Hors ligne</button>
+</div>
+
+<div class="topbar">
+  <a class="back-btn" href="04-dashboard-owner-solo.html">&#8592;</a>
+  <div class="title">Nouvelle transaction</div>
+</div>
+
+<div class="container">
+
+  <div class="segmented">
+    <button class="active deposit" id="btnDeposit" data-type="deposit">Dépôt</button>
+    <button data-type="withdraw" id="btnWithdraw">Retrait</button>
+  </div>
+
+  <div class="field">
+    <label for="phone">Numéro de téléphone</label>
+    <input type="tel" id="phone" placeholder="6 XX XX XX XX" inputmode="numeric" autocomplete="off">
+    <div class="suggest-list hidden" id="suggestList"></div>
+  </div>
+
+  <div class="beneficiary-inline hidden" id="beneficiaryBox">
+    <div class="bi-row">
+      <div class="bi-icon" id="biIcon">&#8987;</div>
+      <div class="bi-text">
+        <div class="bi-name" id="biName">Vérification en cours…</div>
+        <div class="bi-sub" id="biSub"></div>
+      </div>
+    </div>
+    <div class="bi-note hidden" id="biNote"></div>
+  </div>
+
+  <div class="field">
+    <label for="amount">Montant</label>
+    <div class="amount-input">
+      <input type="text" id="amount" placeholder="0" inputmode="numeric">
+      <span class="suffix">FCFA</span>
+    </div>
+    <div class="quick-amounts" id="quickAmounts"></div>
+    <div class="amounts-hint">Suggestions basées sur vos transactions récentes</div>
+  </div>
+
+  <div class="error-msg hidden" id="errorMsg"></div>
+
+  <button class="btn primary" id="continueBtn" disabled>Saisissez un numéro et un montant</button>
+</div>
+
+<div class="dock">
+  <a class="dicon" href="04-dashboard-owner-solo.html">&#8962;</a>
+  <a class="dicon active" href="05-nouvelle-transaction.html">&#65291;</a>
+  <a class="dicon" href="07-reapprovisionnement.html">&#128176;</a>
+  <a class="dicon" href="14-historique-transactions.html">&#128202;</a>
+</div>
+
+<script>
+  const recentTxns = [
+    {name:'N. Fotso',   phone:'670123456', amount:15000},
+    {name:'N. Fotso',   phone:'670123456', amount:10000},
+    {name:'N. Fotso',   phone:'670123456', amount:15000},
+    {name:'P. Ateba',   phone:'691234567', amount:8000},
+    {name:'R. Biya E.', phone:'675554433', amount:50000},
+    {name:'S. Nguemo',  phone:'656789012', amount:12500},
+    {name:'A. Mballa',  phone:'677889900', amount:5000},
+    {name:'A. Mballa',  phone:'677889900', amount:5000},
+    {name:'C. Eyenga',  phone:'699001122', amount:25000},
+    {name:'C. Eyenga',  phone:'699001122', amount:10000},
+  ];
+
+  function detectOperator(digits) {
+    if (digits.length < 2) return null;
+    const first2 = digits.slice(0,2);
+    const first3 = digits.slice(0,3);
+    if (first2 === '67') return 'MTN';
+    if (first2 === '69') return 'Orange';
+    const n3 = parseInt(first3, 10);
+    if (!isNaN(n3)) {
+      if (n3 >= 650 && n3 <= 654) return 'MTN';
+      if (n3 >= 655 && n3 <= 659) return 'Orange';
+    }
+    return 'unknown';
+  }
+  function operatorLabel(op) { return op === 'MTN' ? 'MTN MoMo' : op === 'Orange' ? 'Orange Money' : ''; }
+
+  function formatPhoneDisplay(digits) {
+    digits = digits.slice(0, 9);
+    if (digits.length === 0) return '';
+    let out = digits[0];
+    for (let i = 1; i < digits.length; i += 2) out += ' ' + digits.slice(i, i + 2);
+    return out;
+  }
+
+  function buildClientDirectory() {
+    const map = {};
+    recentTxns.forEach((t, idx) => {
+      if (!map[t.phone]) map[t.phone] = { name: t.name, phone: t.phone, amounts: [], lastIndex: idx };
+      map[t.phone].amounts.push(t.amount);
+      map[t.phone].lastIndex = idx;
+    });
+    return Object.values(map).sort((a,b) => b.lastIndex - a.lastIndex);
+  }
+  const clientDirectory = buildClientDirectory();
+  function mostFrequent(amounts) {
+    const counts = {};
+    amounts.forEach(a => counts[a] = (counts[a]||0) + 1);
+    return Object.entries(counts).sort((a,b) => b[1]-a[1])[0][0];
+  }
+
+  const phone = document.getElementById('phone');
+  const suggestList = document.getElementById('suggestList');
+  const amount = document.getElementById('amount');
+  const quickAmounts = document.getElementById('quickAmounts');
+  const continueBtn = document.getElementById('continueBtn');
+  const errorMsg = document.getElementById('errorMsg');
+  const beneficiaryBox = document.getElementById('beneficiaryBox');
+  const biIcon = document.getElementById('biIcon');
+  const biName = document.getElementById('biName');
+  const biSub = document.getElementById('biSub');
+  const biNote = document.getElementById('biNote');
+
+  let selectedClient = null;
+  let verificationState = null; // null | 'loading' | 'found' | 'error' | 'offline'
+  let simMode = 'found';
+
+  document.querySelectorAll('.demo-toggle button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.demo-toggle button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      simMode = b.dataset.sim;
+      const digits = phone.value.replace(/\D/g,'');
+      if (digits.length === 9) runVerification(digits);
+    });
+  });
+
+  const btnDeposit = document.getElementById('btnDeposit');
+  const btnWithdraw = document.getElementById('btnWithdraw');
+  btnDeposit.addEventListener('click', () => { btnDeposit.classList.add('active','deposit'); btnWithdraw.classList.remove('active','withdraw'); });
+  btnWithdraw.addEventListener('click', () => { btnWithdraw.classList.add('active','withdraw'); btnDeposit.classList.remove('active','deposit'); });
+
+  function renderSuggestions(digits) {
+    let matches = digits.length === 0 ? clientDirectory.slice(0,4) : clientDirectory.filter(c => c.phone.includes(digits)).slice(0,5);
+    if (matches.length === 0) {
+      suggestList.innerHTML = '<div class="suggest-empty">Aucun numéro récent correspondant</div>';
+    } else {
+      suggestList.innerHTML = matches.map(c => {
+        const op = detectOperator(c.phone);
+        const opClass = op === 'MTN' ? 'momo' : op === 'Orange' ? 'om' : '';
+        const opLabel = op === 'MTN' ? 'MoMo' : op === 'Orange' ? 'OM' : '?';
+        return `<div class="suggest-item" data-phone="${c.phone}" data-name="${c.name}">
+          <div class="si-left"><span class="si-name">${c.name}</span><span class="si-num">${formatPhoneDisplay(c.phone)}</span></div>
+          <span class="si-op ${opClass}">${opLabel}</span>
+        </div>`;
+      }).join('');
+    }
+    suggestList.classList.remove('hidden');
+    suggestList.querySelectorAll('.suggest-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const p = item.dataset.phone;
+        phone.value = formatPhoneDisplay(p);
+        selectedClient = clientDirectory.find(c => c.phone === p) || null;
+        suggestList.classList.add('hidden');
+        runVerification(p);
+        renderQuickAmounts();
+      });
+    });
+  }
+
+  phone.addEventListener('input', () => {
+    const digits = phone.value.replace(/\D/g,'').slice(0,9);
+    phone.value = formatPhoneDisplay(digits);
+    selectedClient = clientDirectory.find(c => c.phone === digits) || null;
+    renderSuggestions(digits);
+    renderQuickAmounts();
+    if (digits.length === 9) {
+      runVerification(digits);
+    } else {
+      verificationState = null;
+      beneficiaryBox.classList.add('hidden');
+      updateButton();
+    }
+  });
+  phone.addEventListener('focus', () => renderSuggestions(phone.value.replace(/\D/g,'')));
+  document.addEventListener('click', (e) => { if (!e.target.closest('.field')) suggestList.classList.add('hidden'); });
+
+  function runVerification(digits) {
+    const op = detectOperator(digits);
+    if (op === 'unknown') {
+      verificationState = null;
+      beneficiaryBox.classList.add('hidden');
+      updateButton();
+      return;
+    }
+    verificationState = 'loading';
+    beneficiaryBox.className = 'beneficiary-inline loading';
+    biIcon.innerHTML = '<div class="spinner-sm"></div>';
+    biName.textContent = 'Vérification en cours…';
+    biName.className = 'bi-name';
+    biSub.textContent = formatPhoneDisplay(digits) + ' — ' + operatorLabel(op);
+    biNote.classList.add('hidden');
+    updateButton();
+
+    setTimeout(() => {
+      if (simMode === 'found') {
+        verificationState = 'found';
+        beneficiaryBox.className = 'beneficiary-inline found';
+        biIcon.innerHTML = '&#10003;';
+        biName.className = 'bi-name';
+        biName.textContent = selectedClient ? selectedClient.name.toUpperCase() : 'NDONGO PAUL E.';
+        biSub.textContent = formatPhoneDisplay(digits) + ' — ' + operatorLabel(op);
+        biNote.classList.add('hidden');
+      } else if (simMode === 'error') {
+        verificationState = 'error';
+        beneficiaryBox.className = 'beneficiary-inline error';
+        biIcon.innerHTML = '&#9888;';
+        biName.className = 'bi-name small';
+        biName.textContent = 'Aucune correspondance trouvée';
+        biSub.textContent = formatPhoneDisplay(digits) + ' — ' + operatorLabel(op);
+        biNote.classList.remove('hidden');
+        biNote.innerHTML = '&#9888; Le nom peut être désynchronisé côté opérateur. Vérifiez la pièce d\'identité du client.';
+      } else if (simMode === 'offline') {
+        verificationState = 'offline';
+        beneficiaryBox.className = 'beneficiary-inline offline';
+        biIcon.innerHTML = '&#128225;';
+        biName.className = 'bi-name small';
+        biName.textContent = 'Vérification impossible (hors ligne)';
+        biSub.textContent = formatPhoneDisplay(digits) + ' — ' + operatorLabel(op);
+        biNote.classList.remove('hidden');
+        biNote.innerHTML = '&#128225; Cause différente d\'un nom introuvable — reconnectez-vous si possible.';
+      }
+      beneficiaryBox.classList.remove('hidden');
+      updateButton();
+    }, 700);
+  }
+
+  function renderQuickAmounts() {
+    const chips = [];
+    if (selectedClient) chips.push({ amt: mostFrequent(selectedClient.amounts), usual: true });
+    const counts = {};
+    recentTxns.forEach(t => counts[t.amount] = (counts[t.amount]||0) + 1);
+    Object.entries(counts).sort((a,b) => b[1]-a[1]).forEach(([a]) => {
+      const av = parseInt(a,10);
+      if (!chips.find(c => parseInt(c.amt,10) === av) && chips.length < 4) chips.push({ amt: av, usual:false });
+    });
+    quickAmounts.innerHTML = chips.map(c => {
+      const formatted = new Intl.NumberFormat('fr-FR').format(c.amt);
+      return `<button data-amt="${c.amt}" class="${c.usual?'usual':''}">${c.usual?'<span class=\"tag\">Habituel</span>':''}${formatted}</button>`;
+    }).join('');
+    quickAmounts.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        quickAmounts.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
+        btn.classList.add('selected');
+        amount.value = new Intl.NumberFormat('fr-FR').format(btn.dataset.amt);
+        updateButton();
+      });
+    });
+  }
+  renderQuickAmounts();
+
+  amount.addEventListener('input', () => {
+    amount.value = amount.value.replace(/[^0-9]/g,'');
+    quickAmounts.querySelectorAll('button').forEach(b => b.classList.toggle('selected', b.dataset.amt === amount.value));
+    updateButton();
+  });
+
+  function updateButton() {
+    const digits = phone.value.replace(/\D/g,'');
+    const amtVal = parseInt(amount.value.replace(/\D/g,''), 10) || 0;
+    const amtFormatted = amtVal > 0 ? new Intl.NumberFormat('fr-FR').format(amtVal) + ' FCFA' : '';
+    const phoneOk = digits.length === 9 && detectOperator(digits) !== 'unknown';
+
+    continueBtn.classList.remove('danger-cta');
+    errorMsg.classList.add('hidden');
+
+    if (!phoneOk || amtVal <= 0) {
+      continueBtn.disabled = true;
+      continueBtn.textContent = 'Saisissez un numéro et un montant';
+      return;
+    }
+    if (verificationState === 'loading' || verificationState === null) {
+      continueBtn.disabled = true;
+      continueBtn.textContent = 'Vérification en cours…';
+      return;
+    }
+    if (verificationState === 'found') {
+      continueBtn.disabled = false;
+      const n = selectedClient ? selectedClient.name : 'NDONGO Paul E.';
+      continueBtn.textContent = 'Confirmer pour ' + n + ' — ' + amtFormatted;
+      return;
+    }
+    if (verificationState === 'error' || verificationState === 'offline') {
+      continueBtn.disabled = false;
+      continueBtn.classList.add('danger-cta');
+      continueBtn.textContent = verificationState === 'error'
+        ? 'Continuer à mes risques — nom non vérifié'
+        : 'Continuer sans vérification (hors ligne)';
+    }
+  }
+
+  continueBtn.addEventListener('click', () => {
+    if (continueBtn.disabled) return;
+    if (verificationState === 'found') {
+      window.location.href = '06-confirmation.html?verified=1';
+    } else {
+      window.location.href = '06-confirmation.html?verified=0&reason=' + verificationState;
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zola — Contrôle de caisse</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  :root {
+    --orange:#F56001; --orange-dim:#FFF1E6; --ink:#0A0A0A; --slate:#5C5C5E; --mist:#F4F4F5;
+    --white:#FFFFFF; --border:#E5E5E7; --alert:#D14343; --alert-bg:#FBEAEA; --success:#1E8E5A; --success-bg:#E8F5EE;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--mist); color:var(--ink); font-feature-settings:"tnum" 1; padding-bottom:60px; }
+  .topbar { display:flex; align-items:center; gap:14px; padding:20px 24px; max-width:560px; margin:0 auto; }
+  .back-btn { width:38px; height:38px; border-radius:12px; background:var(--white); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; text-decoration:none; color:var(--ink); font-size:16px; }
+  .topbar .title { font-size:18px; font-weight:800; }
+  .topbar .sub { font-size:12px; color:var(--slate); }
+
+  .container { max-width:560px; margin:0 auto; padding:0 24px; display:flex; flex-direction:column; gap:16px; }
+
+  .who-card { display:flex; align-items:center; gap:12px; background:var(--white); border-radius:16px; padding:14px 16px; border:1px solid var(--border); }
+  .who-avatar { width:38px; height:38px; border-radius:50%; background:var(--ink); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
+  .who-name { font-size:13px; font-weight:700; }
+  .who-meta { font-size:11px; color:var(--slate); }
+
+  .alert-banner { border-radius:16px; padding:15px 18px; font-size:13px; font-weight:600; background:var(--alert-bg); color:var(--alert); }
+
+  .block { background:var(--white); border-radius:16px; padding:16px; border:1.5px solid var(--border); }
+  .block-top { display:flex; justify-content:space-between; margin-bottom:10px; font-size:13px; font-weight:700; }
+  .block .row { display:flex; justify-content:space-between; font-size:13px; padding:6px 0; }
+  .block .row .lbl { color:var(--slate); }
+  .block .row.gap { border-top:1px dashed var(--border); margin-top:6px; padding-top:10px; font-weight:800; }
+  .block .row.gap.bad .val { color:var(--alert); }
+  .block .row.gap.ok .val { color:var(--success); }
+
+  .field label { display:block; font-size:13px; font-weight:600; margin-bottom:8px; }
+  textarea { width:100%; padding:13px 14px; border-radius:12px; border:1.5px solid var(--border); font-family:'Inter',sans-serif; font-size:14px; min-height:70px; }
+
+  .btn { width:100%; padding:16px; border-radius:14px; border:none; font-family:'Inter',sans-serif; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:10px; }
+  .btn.primary { background:var(--orange); color:#fff; }
+  .btn.secondary { background:var(--white); color:var(--ink); border:1.5px solid var(--border); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="09-dashboard-owner-multi.html">&#8592;</a>
+  <div><div class="title">Contrôle · Ndokoti</div><div class="sub">Clôture déclarée par Brice R. — 04/07 18:02</div></div>
+</div>
+
+<div class="container">
+
+  <div class="who-card">
+    <div class="who-avatar">BR</div>
+    <div><div class="who-name">Brice R.</div><div class="who-meta">Superviseur assigné à ce point</div></div>
+  </div>
+
+  <div class="alert-banner">&#9888; Écart détecté sur le cash — commentaire du superviseur ci-dessous</div>
+
+  <div class="block">
+    <div class="block-top"><span>Cash</span></div>
+    <div class="row"><span class="lbl">Solde théorique</span><span class="val">96 500 FCFA</span></div>
+    <div class="row"><span class="lbl">Déclaré par Brice</span><span class="val">88 000 FCFA</span></div>
+    <div class="row gap bad"><span class="lbl">Écart</span><span class="val">− 8 500 FCFA</span></div>
+  </div>
+
+  <div class="block">
+    <div class="block-top"><span>Orange Money</span></div>
+    <div class="row"><span class="lbl">Solde théorique</span><span class="val">54 000 FCFA</span></div>
+    <div class="row"><span class="lbl">Déclaré par Brice</span><span class="val">54 000 FCFA</span></div>
+    <div class="row gap ok"><span class="lbl">Écart</span><span class="val">&#10003; Aucun</span></div>
+  </div>
+
+  <div class="block">
+    <div class="block-top"><span>MTN MoMo</span></div>
+    <div class="row"><span class="lbl">Solde théorique</span><span class="val">12 000 FCFA</span></div>
+    <div class="row"><span class="lbl">Déclaré par Brice</span><span class="val">12 000 FCFA</span></div>
+    <div class="row gap ok"><span class="lbl">Écart</span><span class="val">&#10003; Aucun</span></div>
+  </div>
+
+  <div class="block">
+    <div class="block-top"><span>Commentaire de Brice</span></div>
+    <div style="font-size:13px;color:var(--slate);">"Un client a payé 8 500 en moins, je pense qu'il s'agit d'une erreur de rendu monnaie en fin de journée."</div>
+  </div>
+
+  <div class="field">
+    <label for="ownerComment">Votre décision / commentaire</label>
+    <textarea id="ownerComment" placeholder="Ex: Accepté, à surveiller la semaine prochaine..."></textarea>
+  </div>
+
+  <button class="btn primary">Marquer comme résolu</button>
+  <button class="btn secondary">Contacter Brice directement</button>
+</div>
+
+</body>
+</html>

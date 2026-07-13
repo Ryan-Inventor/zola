@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zola — Mon profil</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  :root {
+    --orange:#F56001; --orange-dim:#FFF1E6; --ink:#0A0A0A; --slate:#5C5C5E; --mist:#F4F4F5;
+    --white:#FFFFFF; --border:#E5E5E7; --success:#1E8E5A; --success-bg:#E8F5EE; --alert:#D14343; --alert-bg:#FBEAEA;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--mist); color:var(--ink); font-feature-settings:"tnum" 1; padding-bottom:60px; }
+  .topbar { display:flex; align-items:center; gap:14px; padding:20px 24px; max-width:640px; margin:0 auto; }
+  .back-btn { width:38px; height:38px; border-radius:12px; background:var(--white); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; text-decoration:none; color:var(--ink); font-size:16px; }
+  .topbar .title { font-size:18px; font-weight:800; }
+
+  .container { max-width:640px; margin:0 auto; padding:0 24px; display:flex; flex-direction:column; gap:18px; }
+
+  .profile-header { display:flex; align-items:center; gap:16px; background:var(--white); border-radius:18px; padding:20px; border:1px solid var(--border); }
+  .ph-avatar { width:56px; height:56px; border-radius:50%; background:var(--ink); color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; }
+  .ph-name { font-size:16px; font-weight:800; }
+  .ph-role { font-size:12px; color:var(--slate); margin-top:2px; }
+  .role-badge { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; background:var(--orange-dim); color:var(--orange); padding:3px 9px; border-radius:100px; margin-left:8px; }
+
+  .card { background:var(--white); border-radius:18px; padding:20px; border:1px solid var(--border); }
+  .card h4 { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--slate); margin-bottom:16px; }
+
+  .field { margin-bottom:14px; }
+  .field:last-of-type { margin-bottom:0; }
+  .field label { display:block; font-size:13px; font-weight:600; margin-bottom:7px; }
+  input[type=text], input[type=password], input[type=email] {
+    width:100%; padding:13px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--white);
+    font-family:'Inter',sans-serif; font-size:14px; color:var(--ink);
+  }
+  input:focus { outline:none; border-color:var(--orange); box-shadow:0 0 0 4px var(--orange-dim); }
+  input.error { border-color:var(--alert); }
+
+  .strength-bar { display:flex; gap:4px; margin-top:8px; margin-bottom:4px; }
+  .strength-bar .seg { height:4px; flex:1; border-radius:100px; background:var(--border); }
+  .strength-bar .seg.on1 { background:var(--alert); }
+  .strength-bar .seg.on2 { background:#E0A000; }
+  .strength-bar .seg.on3 { background:var(--success); }
+  .hint { font-size:11px; color:var(--slate); margin-top:4px; }
+
+  .btn { padding:13px 20px; border-radius:12px; border:none; font-family:'Inter',sans-serif; font-size:14px; font-weight:700; cursor:pointer; }
+  .btn.primary { background:var(--orange); color:#fff; }
+  .btn.primary:hover { opacity:0.92; }
+  .btn.danger-outline { background:var(--white); color:var(--alert); border:1.5px solid var(--alert-bg); width:100%; }
+  .btn.danger-outline:hover { background:var(--alert-bg); }
+
+  .save-row { display:flex; align-items:center; gap:12px; margin-top:16px; }
+  .saved-msg { font-size:12px; color:var(--success); font-weight:700; display:none; align-items:center; gap:6px; }
+  .saved-msg.show { display:flex; }
+
+  .error-msg { display:flex; align-items:center; gap:8px; background:var(--alert-bg); color:var(--alert); font-size:13px; font-weight:600; padding:12px 14px; border-radius:12px; margin-top:14px; }
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-btn" href="04-dashboard-owner-solo.html">&#8592;</a>
+  <div class="title">Mon profil</div>
+</div>
+
+<div class="container">
+
+  <div class="profile-header">
+    <div class="ph-avatar">MK</div>
+    <div>
+      <div class="ph-name">Marlyse K. <span class="role-badge">Owner</span></div>
+      <div class="ph-role">Bonamoussadi</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>Informations personnelles</h4>
+    <div class="field"><label for="fullname">Nom complet</label><input type="text" id="fullname" value="Marlyse K."></div>
+    <div class="field"><label for="phone">Téléphone</label><input type="text" id="phone" value="6 90 12 34 56"></div>
+    <div class="field"><label for="email">Email</label><input type="email" id="email" value="marlyse.k@email.com"></div>
+    <div class="save-row">
+      <button class="btn primary" id="saveInfo">Enregistrer</button>
+      <span class="saved-msg" id="savedInfoMsg">&#10003; Informations mises à jour</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>Sécurité</h4>
+    <div class="field"><label for="currentPass">Mot de passe actuel</label><input type="password" id="currentPass" placeholder="••••••••"></div>
+    <div class="field">
+      <label for="newPass">Nouveau mot de passe</label>
+      <input type="password" id="newPass" placeholder="••••••••">
+      <div class="strength-bar"><div class="seg" id="s1"></div><div class="seg" id="s2"></div><div class="seg" id="s3"></div></div>
+      <div class="hint" id="strengthLabel">Au moins 8 caractères</div>
+    </div>
+    <div class="field"><label for="confirmPass">Confirmer le nouveau mot de passe</label><input type="password" id="confirmPass" placeholder="••••••••"></div>
+    <div class="error-msg hidden" id="passError"></div>
+    <div class="save-row">
+      <button class="btn primary" id="savePass">Changer le mot de passe</button>
+      <span class="saved-msg" id="savedPassMsg">&#10003; Mot de passe changé</span>
+    </div>
+  </div>
+
+  <button class="btn danger-outline" id="logoutBtn">Se déconnecter</button>
+
+</div>
+
+<script>
+  document.getElementById('saveInfo').addEventListener('click', () => {
+    const msg = document.getElementById('savedInfoMsg');
+    msg.classList.add('show');
+    setTimeout(() => msg.classList.remove('show'), 2500);
+  });
+
+  const newPass = document.getElementById('newPass');
+  const segs = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3')];
+  const strengthLabel = document.getElementById('strengthLabel');
+  newPass.addEventListener('input', () => {
+    const v = newPass.value;
+    let score = 0;
+    if (v.length >= 8) score++;
+    if (/[0-9]/.test(v) && /[a-zA-Z]/.test(v)) score++;
+    if (/[A-Z]/.test(v) && /[^a-zA-Z0-9]/.test(v)) score++;
+    segs.forEach((s,i)=> s.className = 'seg' + (i < score ? (' on'+score) : ''));
+    strengthLabel.textContent = v.length === 0 ? 'Au moins 8 caractères' : (score <= 1 ? 'Mot de passe faible' : score === 2 ? 'Mot de passe correct' : 'Mot de passe solide');
+  });
+
+  document.getElementById('savePass').addEventListener('click', () => {
+    const current = document.getElementById('currentPass');
+    const confirmPass = document.getElementById('confirmPass');
+    const passError = document.getElementById('passError');
+    const savedMsg = document.getElementById('savedPassMsg');
+
+    [current, newPass, confirmPass].forEach(el => el.classList.remove('error'));
+    passError.classList.add('hidden');
+
+    if (!current.value) { current.classList.add('error'); passError.textContent = 'Veuillez saisir votre mot de passe actuel.'; passError.classList.remove('hidden'); return; }
+    if (newPass.value.length < 8) { newPass.classList.add('error'); passError.textContent = 'Le nouveau mot de passe doit contenir au moins 8 caractères.'; passError.classList.remove('hidden'); return; }
+    if (newPass.value !== confirmPass.value) { confirmPass.classList.add('error'); passError.textContent = 'La confirmation ne correspond pas au nouveau mot de passe.'; passError.classList.remove('hidden'); return; }
+
+    current.value = ''; newPass.value = ''; confirmPass.value = '';
+    segs.forEach(s => s.className = 'seg');
+    strengthLabel.textContent = 'Au moins 8 caractères';
+    savedMsg.classList.add('show');
+    setTimeout(() => savedMsg.classList.remove('show'), 2500);
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    window.location.href = '01-connexion.html';
+  });
+</script>
+
+</body>
+</html>

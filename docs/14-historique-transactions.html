@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zola — Historique des transactions</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  :root {
+    --orange:#F56001; --orange-dim:#FFF1E6; --ink:#0A0A0A; --slate:#5C5C5E; --mist:#F4F4F5;
+    --white:#FFFFFF; --border:#E5E5E7; --success:#1E8E5A; --success-bg:#E8F5EE; --info:#B8860B; --info-bg:#FFF9DB;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--mist); color:var(--ink); font-feature-settings:"tnum" 1; padding-bottom:60px; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; padding:20px 24px; max-width:1050px; margin:0 auto; flex-wrap:wrap; gap:10px; }
+  .topbar .left { display:flex; align-items:center; gap:14px; }
+  .back-btn { width:38px; height:38px; border-radius:12px; background:var(--white); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; text-decoration:none; color:var(--ink); font-size:16px; }
+  .topbar .title { font-size:18px; font-weight:800; }
+  .export-btn { background:var(--white); border:1.5px solid var(--border); color:var(--ink); font-size:13px; font-weight:700; padding:10px 16px; border-radius:12px; cursor:pointer; }
+
+  .container { max-width:1050px; margin:0 auto; padding:0 24px; display:flex; flex-direction:column; gap:14px; }
+
+  .filters-card { background:var(--white); border-radius:16px; padding:10px; border:1px solid var(--border); display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .period-group { display:flex; gap:6px; }
+  .period-group button { background:transparent; border:none; padding:9px 13px; border-radius:11px; font-family:'Inter',sans-serif; font-size:13px; font-weight:700; color:var(--slate); cursor:pointer; }
+  .period-group button.active { background:var(--ink); color:#fff; }
+  .filters-sep { width:1px; height:24px; background:var(--border); margin:0 2px; }
+  .custom-range { display:none; align-items:center; gap:6px; }
+  .custom-range.visible { display:flex; }
+  .custom-range input[type=date] { padding:8px 10px; border-radius:10px; border:1.5px solid var(--border); font-family:'Inter',sans-serif; font-size:12px; }
+  .custom-range span { font-size:12px; color:var(--slate); }
+
+  .filters-row2 { background:var(--white); border-radius:16px; padding:10px; border:1px solid var(--border); display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .filters-row2 input[type=text] { flex:1; min-width:180px; padding:11px 14px; border-radius:12px; border:1.5px solid var(--border); font-family:'Inter',sans-serif; font-size:13px; }
+  .filters-row2 select { padding:11px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--white); font-family:'Inter',sans-serif; font-size:13px; font-weight:600; }
+  .filters-row2 input:focus, .filters-row2 select:focus { outline:none; border-color:var(--orange); }
+
+  .summary-line { font-size:13px; color:var(--slate); font-weight:600; }
+  .summary-line b { color:var(--ink); }
+
+  .card { background:var(--white); border-radius:18px; border:1px solid var(--border); overflow:hidden; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; font-size:11px; text-transform:uppercase; color:var(--slate); padding:12px 14px; border-bottom:1px solid var(--border); font-weight:700; background:var(--mist); }
+  td { padding:12px 14px; border-bottom:1px solid #F0F0F1; }
+  tr:last-child td { border-bottom:none; }
+  .type-pill { font-size:11px; font-weight:700; padding:3px 9px; border-radius:100px; }
+  .type-pill.deposit { background:var(--success-bg); color:var(--success); }
+  .type-pill.withdraw { background:var(--mist); color:var(--ink); }
+  .op-pill { font-size:10px; font-weight:800; padding:3px 8px; border-radius:100px; }
+  .op-pill.om { background:#FFF1E6; color:#F56001; }
+  .op-pill.momo { background:var(--info-bg); color:var(--info); }
+  .amount-cell { font-weight:800; }
+  .empty-row td { text-align:center; padding:40px; color:var(--slate); }
+
+  @media (max-width:700px) { .filters-card select { margin-left:0; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="left"><a class="back-btn" href="04-dashboard-owner-solo.html">&#8592;</a><div class="title">Historique des transactions</div></div>
+  <button class="export-btn">&#11015; Exporter</button>
+</div>
+
+<div class="container">
+
+  <div class="filters-card">
+    <div class="period-group">
+      <button data-period="today">Aujourd'hui</button>
+      <button class="active" data-period="7j">7 jours</button>
+      <button data-period="30j">30 jours</button>
+      <button data-period="mois">Ce mois</button>
+      <button data-period="custom">Personnalisé</button>
+    </div>
+    <div class="custom-range" id="customRange">
+      <input type="date" id="dateFrom"><span>&#8594;</span><input type="date" id="dateTo">
+    </div>
+  </div>
+
+  <div class="filters-row2">
+    <input type="text" id="searchInput" placeholder="Rechercher un client ou un numéro...">
+    <select id="pointFilter"><option>Tous les points</option><option>Bonamoussadi</option><option>Ndokoti</option><option>Akwa</option></select>
+    <select id="opFilter"><option>Tous les opérateurs</option><option>Orange Money</option><option>MTN MoMo</option></select>
+    <select id="typeFilter"><option>Tous les types</option><option>Dépôt</option><option>Retrait</option></select>
+  </div>
+
+  <div class="summary-line" id="summaryLine">142 transactions &middot; 2 100 000 FCFA</div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr><th>Date / Heure</th><th>Client</th><th>Numéro</th><th>Type</th><th>Montant</th><th>Opérateur</th><th>Point</th><th>Effectuée par</th></tr>
+      </thead>
+      <tbody id="txnBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  // dates relatives à "aujourd'hui" simulé = 04/07/2026, pour que les filtres de période aient un sens démonstratif
+  const transactions = [
+    {dateISO:'2026-07-04', date:'04/07 14:32', name:'N. Fotso', phone:'6 70 12 34 56', type:'Dépôt', amount:15000, op:'MTN MoMo', point:'Bonamoussadi', by:'Moi-même'},
+    {dateISO:'2026-07-04', date:'04/07 13:58', name:'P. Ateba', phone:'6 91 23 45 67', type:'Retrait', amount:8000, op:'Orange Money', point:'Bonamoussadi', by:'Moi-même'},
+    {dateISO:'2026-07-04', date:'04/07 12:10', name:'R. Biya E.', phone:'6 75 55 44 33', type:'Dépôt', amount:50000, op:'Orange Money', point:'Bonamoussadi', by:'Moi-même'},
+    {dateISO:'2026-07-04', date:'04/07 11:45', name:'S. Nguemo', phone:'6 56 78 90 12', type:'Dépôt', amount:12500, op:'MTN MoMo', point:'Bonamoussadi', by:'Moi-même'},
+    {dateISO:'2026-07-04', date:'04/07 10:20', name:'A. Mballa', phone:'6 77 88 99 00', type:'Retrait', amount:5000, op:'MTN MoMo', point:'Ndokoti', by:'Brice R.'},
+    {dateISO:'2026-07-04', date:'04/07 09:55', name:'C. Eyenga', phone:'6 99 00 11 22', type:'Dépôt', amount:25000, op:'Orange Money', point:'Akwa', by:'Sarah N.'},
+    {dateISO:'2026-07-03', date:'03/07 17:40', name:'N. Fotso', phone:'6 70 12 34 56', type:'Dépôt', amount:10000, op:'MTN MoMo', point:'Bonamoussadi', by:'Moi-même'},
+    {dateISO:'2026-07-03', date:'03/07 16:12', name:'M. Talla', phone:'6 92 11 22 33', type:'Retrait', amount:30000, op:'Orange Money', point:'Ndokoti', by:'Brice R.'},
+    {dateISO:'2026-07-03', date:'03/07 15:03', name:'C. Eyenga', phone:'6 99 00 11 22', type:'Dépôt', amount:10000, op:'Orange Money', point:'Akwa', by:'Sarah N.'},
+    {dateISO:'2026-07-03', date:'03/07 14:22', name:'A. Mballa', phone:'6 77 88 99 00', type:'Retrait', amount:5000, op:'MTN MoMo', point:'Ndokoti', by:'Brice R.'},
+    {dateISO:'2026-07-03', date:'03/07 11:08', name:'P. Ateba', phone:'6 91 23 45 67', type:'Dépôt', amount:20000, op:'Orange Money', point:'Bonamoussadi', by:'Moi-même'},
+    {dateISO:'2026-07-02', date:'02/07 18:30', name:'R. Biya E.', phone:'6 75 55 44 33', type:'Retrait', amount:15000, op:'Orange Money', point:'Bonamoussadi', by:'Moi-même'},
+    {dateISO:'2026-06-25', date:'25/06 10:15', name:'K. Owona', phone:'6 78 44 55 66', type:'Dépôt', amount:40000, op:'Orange Money', point:'Bonamoussadi', by:'Moi-même'},
+    {dateISO:'2026-06-18', date:'18/06 09:02', name:'F. Ndam', phone:'6 53 22 11 00', type:'Retrait', amount:22000, op:'MTN MoMo', point:'Akwa', by:'Sarah N.'},
+    {dateISO:'2026-06-02', date:'02/06 16:40', name:'N. Fotso', phone:'6 70 12 34 56', type:'Dépôt', amount:15000, op:'MTN MoMo', point:'Bonamoussadi', by:'Moi-même'},
+  ];
+
+  const TODAY = new Date('2026-07-04');
+
+  const periodButtons = document.querySelectorAll('.period-group button');
+  const customRange = document.getElementById('customRange');
+  const dateFrom = document.getElementById('dateFrom');
+  const dateTo = document.getElementById('dateTo');
+  let activePeriod = '7j';
+
+  periodButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      periodButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activePeriod = btn.dataset.period;
+      customRange.classList.toggle('visible', activePeriod === 'custom');
+      render();
+    });
+  });
+  dateFrom.addEventListener('input', render);
+  dateTo.addEventListener('input', render);
+
+  function daysAgo(n) { const d = new Date(TODAY); d.setDate(d.getDate() - n); return d; }
+
+  function inPeriod(txnDateISO) {
+    const d = new Date(txnDateISO);
+    if (activePeriod === 'today') return d.toDateString() === TODAY.toDateString();
+    if (activePeriod === '7j') return d >= daysAgo(6) && d <= TODAY;
+    if (activePeriod === '30j') return d >= daysAgo(29) && d <= TODAY;
+    if (activePeriod === 'mois') return d.getMonth() === TODAY.getMonth() && d.getFullYear() === TODAY.getFullYear();
+    if (activePeriod === 'custom') {
+      if (!dateFrom.value || !dateTo.value) return true;
+      return d >= new Date(dateFrom.value) && d <= new Date(dateTo.value);
+    }
+    return true;
+  }
+
+  const searchInput = document.getElementById('searchInput');
+  const pointFilter = document.getElementById('pointFilter');
+  const opFilter = document.getElementById('opFilter');
+  const typeFilter = document.getElementById('typeFilter');
+  const txnBody = document.getElementById('txnBody');
+  const summaryLine = document.getElementById('summaryLine');
+
+  function fmt(n) { return new Intl.NumberFormat('fr-FR').format(n); }
+
+  function render() {
+    const q = searchInput.value.trim().toLowerCase();
+    const pf = pointFilter.value;
+    const of = opFilter.value;
+    const tf = typeFilter.value;
+
+    const filtered = transactions.filter(t => {
+      if (!inPeriod(t.dateISO)) return false;
+      if (q && !(t.name.toLowerCase().includes(q) || t.phone.replace(/\s/g,'').includes(q.replace(/\s/g,'')))) return false;
+      if (pf !== 'Tous les points' && t.point !== pf) return false;
+      if (of !== 'Tous les opérateurs' && t.op !== of) return false;
+      if (tf !== 'Tous les types' && t.type !== tf) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      txnBody.innerHTML = '<tr class="empty-row"><td colspan="8">Aucune transaction ne correspond à cette période / ces filtres</td></tr>';
+    } else {
+      txnBody.innerHTML = filtered.map(t => {
+        const opClass = t.op === 'MTN MoMo' ? 'momo' : 'om';
+        const opLabel = t.op === 'MTN MoMo' ? 'MoMo' : 'OM';
+        const typeClass = t.type === 'Dépôt' ? 'deposit' : 'withdraw';
+        return `<tr>
+          <td>${t.date}</td><td>${t.name}</td><td>${t.phone}</td>
+          <td><span class="type-pill ${typeClass}">${t.type}</span></td>
+          <td class="amount-cell">${fmt(t.amount)} FCFA</td>
+          <td><span class="op-pill ${opClass}">${opLabel}</span></td>
+          <td>${t.point}</td><td>${t.by}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    const total = filtered.reduce((s,t) => s + t.amount, 0);
+    summaryLine.innerHTML = '<b>' + filtered.length + '</b> transaction' + (filtered.length !== 1 ? 's' : '') + ' &middot; <b>' + fmt(total) + ' FCFA</b>';
+  }
+
+  [searchInput, pointFilter, opFilter, typeFilter].forEach(el => el.addEventListener('input', render));
+  render();
+</script>
+
+</body>
+</html>

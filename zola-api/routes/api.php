@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\AuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
-    // Endpoints métier ajoutés ticket par ticket (AUTH-02+)
+    Route::post('/auth/login', [AuthController::class, 'login']);
 });

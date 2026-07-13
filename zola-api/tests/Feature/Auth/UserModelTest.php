@@ -46,9 +46,9 @@ it('hashes the password automatically', function () {
 });
 
 it('allows a nullable email but enforces unique phone', function () {
-    User::factory()->create(['phone' => '677777777', 'email' => null]);
+    User::factory()->create(['phone' => '679999901', 'email' => null]);
 
-    expect(fn () => User::factory()->create(['phone' => '677777777']))
+    expect(fn () => User::factory()->create(['phone' => '679999901']))
         ->toThrow(Illuminate\Database\QueryException::class);
 });
 

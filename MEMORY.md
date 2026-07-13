@@ -11,9 +11,9 @@
 | Champ | Valeur |
 |---|---|
 | **Dernière mise à jour** | 2026-07-13 |
-| **Ticket courant** | AUTH-02 (prochain) |
+| **Ticket courant** | AUTH-03 (prochain) |
 | **Sprint** | 1 — Setup + Auth |
-| **Tickets terminés** | 7 / 46 (BOOT-00 + INF-01 à INF-05 + AUTH-01) |
+| **Tickets terminés** | 8 / 46 (BOOT-00 + INF-01 à INF-05 + AUTH-01 + AUTH-02) |
 
 ### Structure du monorepo
 
@@ -287,6 +287,42 @@ php artisan test                   # 8 passed (13 assertions)
 
 ---
 
+### AUTH-02 — Endpoint login [TDD]
+
+| Champ | Détail |
+|---|---|
+| **Statut** | ✅ Terminé |
+| **Objectif** | POST `/auth/login` — identifiant email ou téléphone, token Sanctum si `active` |
+| **Références** | docs/PROMPTS.md AUTH-02, docs/SPECS.md §2, maquette `01-connexion.html` |
+
+#### Cycle TDD
+1. **Rouge** — 8 tests `LoginTest.php` écrits en premier (404 route inexistante)
+2. **Vert** — implémentation AuthController + LoginRequest + UserResource + route
+
+#### Fichiers créés
+- `zola-api/tests/Feature/Auth/LoginTest.php` — 8 tests (email, phone, 401 générique, pending 403, suspended 403, active seul émet token)
+- `zola-api/app/Http/Controllers/Api/AuthController.php` — `login()` : `@` → email, sinon phone ; vérif status avant token
+- `zola-api/app/Http/Requests/LoginRequest.php` — `identifier` + `password` requis
+- `zola-api/app/Http/Resources/UserResource.php` — id, name, phone, email, role, status (sans password)
+- `zola-api/routes/api.php` — `POST /auth/login`
+
+#### Règles métier implémentées
+- Identifiants invalides (inexistant ou mauvais mdp) → `401 UNAUTHORIZED`, message unique : *« Identifiants incorrects. Vérifiez votre email/téléphone et votre mot de passe. »*
+- `pending` → `403 FORBIDDEN` *« Compte en attente d'activation »*, aucun token
+- `suspended` → `403 FORBIDDEN` *« Compte suspendu, contactez le support »*, aucun token
+- `active` → `200` avec `data.token` + `data.user` (UserResource)
+
+#### Validation
+```bash
+php artisan test --filter=LoginTest  → 8 passed (40 assertions)
+php artisan test                   → 16 passed (53 assertions)
+```
+
+#### Confirmation
+✅ AUTH-02 Done — 8 tests Pest verts, statuts bloquants couverts
+
+---
+
 ## Historique des commits
 
 | Date | Ticket | Message | SHA |
@@ -327,4 +363,4 @@ Pour chaque ticket :
 
 ## Backlog rapide
 
-Sprint 1 : ~~INF-01~~ ~~INF-05~~ ~~AUTH-01~~ → **AUTH-02** → …
+Sprint 1 : ~~INF-01~~ ~~INF-05~~ ~~AUTH-01~~ ~~AUTH-02~~ → **AUTH-03** → …

@@ -11,9 +11,9 @@
 | Champ | Valeur |
 |---|---|
 | **Dernière mise à jour** | 2026-07-13 |
-| **Ticket courant** | INF-04 (prochain) |
+| **Ticket courant** | INF-05 (prochain) |
 | **Sprint** | 1 — Setup + Auth |
-| **Tickets terminés** | 4 / 46 (BOOT-00 + INF-01 + INF-02 + INF-03) |
+| **Tickets terminés** | 5 / 46 (BOOT-00 + INF-01 à INF-04) |
 
 ### Structure du monorepo
 
@@ -235,7 +235,7 @@ curl.exe http://localhost:3000/ → 200
 | 2026-07-13 | INF-01 | feat(INF-01): init Laravel API + Sanctum + JSON errors | `66ec4d5` |
 | 2026-07-13 | INF-02 | feat(INF-02): config MySQL zola utf8mb4 | `25dc6ac` |
 | 2026-07-13 | INF-03 | feat(INF-03): init Nuxt 3 PWA Tailwind Pinia | `269a496` |
-| 2026-07-13 | INF-04 | feat(INF-04): environnement dev Docker + scripts + seed | (a pousser) |
+| 2026-07-13 | INF-04 | feat(INF-04): environnement dev Docker + scripts + seed | `ca38106` |
 
 ---
 
